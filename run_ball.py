@@ -7,8 +7,9 @@ import paddle
 import time
 
 class BouncingSimulator:
-    def __init__(self, num_balls):
+    def __init__(self, num_balls, level=1):
         self.num_balls = num_balls
+        self.level = level  # Track the level of the game
         self.ball_list = []
         self.t = 0.0
         self.pq = []
@@ -28,7 +29,6 @@ class BouncingSimulator:
         for i in range(self.num_balls):
             # Randomly choose one of the four edges (top, bottom, left, right)
             edge = random.choice(['top', 'bottom', 'left', 'right'])
-            edge = 'right'
             
             # Random position and velocity
             if edge == 'top':  # Spawn on the top edge
@@ -44,19 +44,16 @@ class BouncingSimulator:
                 x = self.canvas_width  # X position at the right of the screen
                 y = random.uniform(-self.canvas_height, self.canvas_height)
             
-            # Random velocity in both directions
-            vx = 5 * random.uniform(-1.0, 1.0)
-            vy = 5 * random.uniform(-1.0, 1.0)
+            # Level-based speed adjustment
+            speed_factor = 1 + (self.level - 1) * 0.5  # Increase speed with each level
+            vx = 5 * random.uniform(-1.0, 1.0) * speed_factor
+            vy = 5 * random.uniform(-1.0, 1.0) * speed_factor
             
             # Random color
             ball_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             
             # Create the ball and append it to the list
             self.ball_list.append(ball.Ball(ball_radius, x, y, vx, vy, ball_color, i))
-
-
-
-
 
 
         tom = turtle.Turtle()
@@ -122,6 +119,20 @@ class BouncingSimulator:
         if (self.my_paddle.location[0] + self.my_paddle.width/2 + 40) <= self.canvas_width:
             self.my_paddle.set_location([self.my_paddle.location[0] + 40, self.my_paddle.location[1]])
 
+    def level_up(self):
+        self.level += 1
+        print(f"Level up! Now at level {self.level}")
+        
+        # You can adjust ball counts or speeds as the level increases
+        self.num_balls += 1  # Increase the number of balls
+
+    def pause_screen(self, message):
+        turtle.penup()
+        turtle.goto(0, 0)
+        turtle.write(message, align="center", font=("Arial", 24, "normal"))
+        time.sleep(2)  # Pause for 2 seconds to show message
+        turtle.clear()  # Clear the message
+
     def run(self):
         # initialize pq with collision events and redraw event
         for i in range(len(self.ball_list)):
@@ -132,6 +143,8 @@ class BouncingSimulator:
         self.screen.listen()
         self.screen.onkey(self.move_left, "Left")
         self.screen.onkey(self.move_right, "Right")
+
+        last_level_up_time = time.time()  # Track the time for level-up
 
         while (True):
             e = heapq.heappop(self.pq)
@@ -146,6 +159,11 @@ class BouncingSimulator:
             for i in range(len(self.ball_list)):
                 self.ball_list[i].move(e.time - self.t)
             self.t = e.time
+
+            # Check if it's time to level up (e.g., after every 10 seconds)
+            if time.time() - last_level_up_time >= 10:
+                self.level_up()  # Level up every 10 seconds
+                last_level_up_time = time.time()
 
             if (ball_a is not None) and (ball_b is not None) and (paddle_a is None):
                 ball_a.bounce_off(ball_b)
