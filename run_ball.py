@@ -4,6 +4,7 @@ import turtle
 import random
 import heapq
 import paddle
+import time
 
 class BouncingSimulator:
     def __init__(self, num_balls):
@@ -16,20 +17,50 @@ class BouncingSimulator:
         turtle.tracer(0)
         turtle.hideturtle()
         turtle.colormode(255)
-        self.canvas_width = turtle.screensize()[0]
-        self.canvas_height = turtle.screensize()[1]
+        self.canvas_width = turtle.screensize()[0] # 400
+        self.canvas_height = turtle.screensize()[1] # 300
         print(self.canvas_width, self.canvas_height)
 
+        # Balls Size
         ball_radius = 0.05 * self.canvas_width
+
+        # Balls Spawning Mechanics
         for i in range(self.num_balls):
-            x = -self.canvas_width + (i+1)*(2*self.canvas_width/(self.num_balls+1))
-            y = 0.0
-            vx = 10*random.uniform(-1.0, 1.0)
-            vy = 10*random.uniform(-1.0, 1.0)
+            # Randomly choose one of the four edges (top, bottom, left, right)
+            edge = random.choice(['top', 'bottom', 'left', 'right'])
+            edge = 'right'
+            
+            # Random position and velocity
+            if edge == 'top':  # Spawn on the top edge
+                x = random.uniform(-self.canvas_width, self.canvas_width)
+                y = self.canvas_height  # Y position at the top of the screen
+            elif edge == 'bottom':  # Spawn on the bottom edge
+                x = random.uniform(-self.canvas_width, self.canvas_width)
+                y = -self.canvas_height  # Y position at the bottom of the screen
+            elif edge == 'left':  # Spawn on the left edge
+                x = -self.canvas_width  # X position at the left of the screen
+                y = random.uniform(-self.canvas_height, self.canvas_height)
+            elif edge == 'right':  # Spawn on the right edge
+                x = self.canvas_width  # X position at the right of the screen
+                y = random.uniform(-self.canvas_height, self.canvas_height)
+            
+            # Random velocity in both directions
+            vx = 5 * random.uniform(-1.0, 1.0)
+            vy = 5 * random.uniform(-1.0, 1.0)
+            
+            # Random color
             ball_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            
+            # Create the ball and append it to the list
             self.ball_list.append(ball.Ball(ball_radius, x, y, vx, vy, ball_color, i))
 
+
+
+
+
+
         tom = turtle.Turtle()
+        # Width , Height , Color, Turtle
         self.my_paddle = paddle.Paddle(200, 50, (255, 0, 0), tom)
         self.my_paddle.set_location([0, -50])
 
@@ -40,13 +71,14 @@ class BouncingSimulator:
         if a_ball is None:
             return
 
-        # particle-particle collisions
+        # particle-particle collisions (2 Balls)
         for i in range(len(self.ball_list)):
+            # Time to Hit
             dt = a_ball.time_to_hit(self.ball_list[i])
             # insert this event into pq
             heapq.heappush(self.pq, my_event.Event(self.t + dt, a_ball, self.ball_list[i], None))
         
-        # particle-wall collisions
+        # particle-wall collisions (Walls)
         dtX = a_ball.time_to_hit_vertical_wall()
         dtY = a_ball.time_to_hit_horizontal_wall()
         heapq.heappush(self.pq, my_event.Event(self.t + dtX, a_ball, None, None))
@@ -140,3 +172,5 @@ class BouncingSimulator:
 num_balls = 10
 my_simulator = BouncingSimulator(num_balls)
 my_simulator.run()
+
+
