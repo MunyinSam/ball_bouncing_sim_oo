@@ -20,13 +20,15 @@ class Ball:
     def draw(self):
         # draw a circle of radius equals to size centered at (x, y) and paint it with color
         turtle.penup()
-        turtle.color(self.color)
-        turtle.fillcolor(self.color)
-        turtle.goto(self.x, self.y-self.size)
+        turtle.pensize(3)  # Set the pen size for the outline
+        turtle.pencolor("black")  # Set the pen color to black for the outline
+        turtle.fillcolor(self.color)  # Set the fill color to the ball's color
+        turtle.goto(self.x, self.y - self.size)  # Move to the starting position for drawing
         turtle.pendown()
-        turtle.begin_fill()
-        turtle.circle(self.size)
-        turtle.end_fill()
+        turtle.begin_fill()  # Start filling the circle with color
+        turtle.circle(self.size)  # Draw the circle with the size as the radius
+        turtle.end_fill()  # Finish filling the circle
+
 
     def bounce_off_vertical_wall(self):
         self.vx = -self.vx

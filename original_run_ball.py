@@ -58,7 +58,7 @@ class BouncingSimulator:
             self.ball_list.append(ball.Ball(ball_radius, x, y, vx, vy, ball_color, i))
 
         tom = turtle.Turtle()
-        self.my_paddle = paddle.Paddle(50, 50, (169, 169, 169), tom)
+        self.my_paddle = paddle.Paddle(50, 50, (37, 150, 190), tom)
         self.my_paddle.set_location([0, 0])
 
         self.screen = turtle.Screen()
@@ -68,7 +68,7 @@ class BouncingSimulator:
 
     # Spawn Balls -------------------------------
     
-    def spawn_ball(self, size=0.05, input_speed=0.5, color=(255, 0, 0), amount=1):
+    def spawn_ball(self, size=0.05, input_speed=0.5, color=(255, 0, 0), amount=1, health=1):
         ball_radius = size * self.canvas_width  # Ball radius based on size
 
         # Minimum distance from the center (to avoid spawning in the lose radius)
@@ -104,7 +104,7 @@ class BouncingSimulator:
             vy = input_speed * (-y / direction)  # Vertical velocity
 
             # Create a new Ball object and add it to the ball list
-            new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list))
+            new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list), health=health)
             self.ball_list.append(new_ball)
             print("Ball appended at position:", x, y)
 
@@ -328,10 +328,27 @@ class BouncingSimulator:
                 print("Level 2")
 
             if self.t > 2000 and self.level == 2:
-                self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
+                self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=8)
                 self.laser_delay = 0.25
                 self.level+=1
                 print("Level 3")
+
+            if self.t > 3000 and self.level == 3:
+                self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
+                self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
+                self.spawn_ball(size=0.05, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
+                self.laser_delay = 0.15
+                self.level+=1
+                print("Level 3")
+
+            if self.t > 4300 and self.level == 4:
+                self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
+                self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
+                self.spawn_ball(size=0.05, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
+                self.spawn_ball(size=0.1, input_speed=0.3, color=(128, 0, 128), amount=1, health=10)
+                self.laser_delay = 0.1
+                self.level+=1
+                print("Level 4")
 
         turtle.done()
 

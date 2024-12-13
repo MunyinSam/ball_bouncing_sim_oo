@@ -16,6 +16,8 @@ class Paddle:
 
     def draw(self):
         self.my_turtle.color(self.color)
+        self.my_turtle.pensize(5)
+        self.my_turtle.pencolor("black")
         self.my_turtle.setheading(0)  # Make sure the turtle faces right
 
         # Begin drawing the hexagon
