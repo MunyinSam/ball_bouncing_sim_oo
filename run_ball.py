@@ -7,9 +7,8 @@ import paddle
 import time
 
 class BouncingSimulator:
-    def __init__(self, num_balls, level=1):
+    def __init__(self, num_balls):
         self.num_balls = num_balls
-        self.level = level  # Track the level of the game
         self.ball_list = []
         self.t = 0.0
         self.pq = []
@@ -44,22 +43,31 @@ class BouncingSimulator:
                 x = self.canvas_width  # X position at the right of the screen
                 y = random.uniform(-self.canvas_height, self.canvas_height)
             
-            # Level-based speed adjustment
-            speed_factor = 1 + (self.level - 1) * 0.5  # Increase speed with each level
-            vx = 5 * random.uniform(-1.0, 1.0) * speed_factor
-            vy = 5 * random.uniform(-1.0, 1.0) * speed_factor
+            # Random velocity in both directions
+            vx = 5 * random.uniform(-1.0, 1.0)
+            vy = 5 * random.uniform(-1.0, 1.0)
             
             # Random color
             ball_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            ball_color = (255, 0, 0)
             
             # Create the ball and append it to the list
             self.ball_list.append(ball.Ball(ball_radius, x, y, vx, vy, ball_color, i))
 
-
+        
         tom = turtle.Turtle()
         # Width , Height , Color, Turtle
-        self.my_paddle = paddle.Paddle(200, 50, (255, 0, 0), tom)
-        self.my_paddle.set_location([0, -50])
+        self.my_paddle = paddle.Paddle(50, 50, (0, 0, 0), tom)
+        self.my_paddle.set_location([0, 0])
+
+        # Initialize Tom's life and create a text object to display the life
+        self.tom_life = 3
+        self.life_display = turtle.Turtle()
+        self.life_display.hideturtle()
+        self.life_display.penup()
+        self.life_display.goto(0, self.canvas_height - 20)
+        self.life_display.write(f"Life: {self.tom_life}", align="center", font=("Arial", 16, "normal"))
+
 
         self.screen = turtle.Screen()
 
@@ -119,19 +127,31 @@ class BouncingSimulator:
         if (self.my_paddle.location[0] + self.my_paddle.width/2 + 40) <= self.canvas_width:
             self.my_paddle.set_location([self.my_paddle.location[0] + 40, self.my_paddle.location[1]])
 
-    def level_up(self):
-        self.level += 1
-        print(f"Level up! Now at level {self.level}")
-        
-        # You can adjust ball counts or speeds as the level increases
-        self.num_balls += 1  # Increase the number of balls
+    # move_up handler updates paddle position upwards
+    def move_down(self):
+        if (self.my_paddle.location[1] - self.my_paddle.height/2 - 40) >= -self.canvas_height:
+            self.my_paddle.set_location([self.my_paddle.location[0], self.my_paddle.location[1] - 40])
 
-    def pause_screen(self, message):
-        turtle.penup()
-        turtle.goto(0, 0)
-        turtle.write(message, align="center", font=("Arial", 24, "normal"))
-        time.sleep(2)  # Pause for 2 seconds to show message
-        turtle.clear()  # Clear the message
+    # move_down handler updates paddle position downwards
+    def move_up(self):
+        if (self.my_paddle.location[1] + self.my_paddle.height/2 + 40) <= self.canvas_height:
+            self.my_paddle.set_location([self.my_paddle.location[0], self.my_paddle.location[1] + 40])
+ 
+    def flash_red(self):
+        """Flashes Tom red to indicate damage."""
+        self.my_paddle.color = (255, 0, 0)  # Change color to red
+        self.my_paddle.draw()
+        turtle.update()
+        time.sleep(0.1)  # Flash for a short moment
+        self.my_paddle.color = (0, 0, 0)  # Change color back to black
+        self.my_paddle.draw()
+        turtle.update()
+
+    def reduce_life(self):
+        """Reduces Tom's life and updates the display."""
+        self.tom_life -= 1
+        self.life_display.clear()
+        self.life_display.write(f"Life: {self.tom_life}", align="center", font=("Arial", 16, "normal"))
 
     def run(self):
         # initialize pq with collision events and redraw event
@@ -143,8 +163,8 @@ class BouncingSimulator:
         self.screen.listen()
         self.screen.onkey(self.move_left, "Left")
         self.screen.onkey(self.move_right, "Right")
-
-        last_level_up_time = time.time()  # Track the time for level-up
+        self.screen.onkey(self.move_up, "Up")
+        self.screen.onkey(self.move_down, "Down")
 
         while (True):
             e = heapq.heappop(self.pq)
@@ -160,11 +180,6 @@ class BouncingSimulator:
                 self.ball_list[i].move(e.time - self.t)
             self.t = e.time
 
-            # Check if it's time to level up (e.g., after every 10 seconds)
-            if time.time() - last_level_up_time >= 10:
-                self.level_up()  # Level up every 10 seconds
-                last_level_up_time = time.time()
-
             if (ball_a is not None) and (ball_b is not None) and (paddle_a is None):
                 ball_a.bounce_off(ball_b)
             elif (ball_a is not None) and (ball_b is None) and (paddle_a is None):
@@ -178,6 +193,10 @@ class BouncingSimulator:
 
             self.__predict(ball_a)
             self.__predict(ball_b)
+
+            if self.tom_life == 0:
+                print("Tom has lost all lives! Game Over.")
+                break
 
             # regularly update the prediction for the paddle as its position may always be changing due to keyboard events
             self.__paddle_predict()

@@ -1,7 +1,7 @@
 class Paddle:
     def __init__(self, width, height, color, my_turtle):
-        self.width = width
-        self.height = height
+        self.width = width * 0.8
+        self.height = height * 0.8
         self.location = [0, 0]
         self.color = color
         self.my_turtle = my_turtle
@@ -11,22 +11,24 @@ class Paddle:
 
     def set_location(self, location):
         self.location = location
-        self.my_turtle.goto(self.location[0], self.location[1])
+        # Move turtle to the center of the paddle (offset by half the height and width)
+        self.my_turtle.goto(self.location[0] - self.width / 2, self.location[1] - self.height / 2)
 
     def draw(self):
         self.my_turtle.color(self.color)
-        self.my_turtle.goto(self.location[0], self.location[1] - self.height/2)
-        self.my_turtle.forward(self.width/2)
+        self.my_turtle.setheading(0)  # Make sure the turtle faces right
+
+        # Begin drawing the hexagon
         self.my_turtle.pendown()
         self.my_turtle.begin_fill()
-        for _ in range(2):
-            self.my_turtle.left(90)
-            self.my_turtle.forward(self.height)
-            self.my_turtle.left(90)
-            self.my_turtle.forward(self.width)
+
+        # Draw the hexagon (6 sides)
+        for _ in range(6):
+            self.my_turtle.forward(self.width)  # Length of each side
+            self.my_turtle.left(60)  # 60-degree turn for a hexagon
+
         self.my_turtle.end_fill()
         self.my_turtle.penup()
-        self.my_turtle.goto(self.location[0], self.location[1])
 
     def clear(self):
         self.my_turtle.clear()
