@@ -2,7 +2,7 @@ import turtle
 import math
 
 class Ball:
-    def __init__(self, size, x, y, vx, vy, color, id, health=1):
+    def __init__(self, size, x, y, vx, vy, color, id, health=1, reward=None):
         self.size = size
         self.radius = size 
         self.x = x
@@ -16,6 +16,8 @@ class Ball:
         self.canvas_width = turtle.screensize()[0]
         self.canvas_height = turtle.screensize()[1]
         self.health = health
+        self.default_health = health
+        self.reward = reward
 
     def draw(self):
         # draw a circle of radius equals to size centered at (x, y) and paint it with color

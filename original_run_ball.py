@@ -13,7 +13,6 @@ class BouncingSimulator:
         self.num_balls = num_balls
         self.ball_list = []
         self.lasers = []
-        self.level = level
         self.t = 0.0
         self.pq = []
         self.HZ = 4
@@ -21,13 +20,22 @@ class BouncingSimulator:
         turtle.tracer(0)
         turtle.hideturtle()
         turtle.colormode(255)
-        self.canvas_width = turtle.screensize()[0]
-        self.canvas_height = turtle.screensize()[1]
-        self.laser_delay = 0.3  # Delay in seconds before a new laser can be fired
+        self.canvas_width = 400
+        self.canvas_height = 320
+
+        self.laser_delay = 0.4
         self.last_laser_time = 0  # Time when the last laser was fired
-        self.ball_spawn_interval = 2  # Interval to spawn a ball (in seconds)
+        self.laser_size = 1
+
+        self.ball_spawn_interval = 2  # Interval to spawn a ball
         self.last_ball_time = 0  # Time when the last ball was spawned
         print(self.canvas_width, self.canvas_height)
+
+        self.score = 0  # Initial score
+        self.score_writer = turtle.Turtle()
+        self.level = level
+        self.level_writer = turtle.Turtle()
+        self.level_notes = turtle.Turtle()
 
         ball_radius = 0.05 * self.canvas_width
         for i in range(self.num_balls):
@@ -68,7 +76,7 @@ class BouncingSimulator:
 
     # Spawn Balls -------------------------------
     
-    def spawn_ball(self, size=0.05, input_speed=0.5, color=(255, 0, 0), amount=1, health=1):
+    def spawn_ball(self, size=0.05, input_speed=0.5, color=(255, 0, 0), amount=1, health=1, reward=None):
         ball_radius = size * self.canvas_width  # Ball radius based on size
 
         # Minimum distance from the center (to avoid spawning in the lose radius)
@@ -104,7 +112,7 @@ class BouncingSimulator:
             vy = input_speed * (-y / direction)  # Vertical velocity
 
             # Create a new Ball object and add it to the ball list
-            new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list), health=health)
+            new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list), health=health, reward=reward)
             self.ball_list.append(new_ball)
             print("Ball appended at position:", x, y)
 
@@ -140,8 +148,8 @@ class BouncingSimulator:
             "y": paddle_y + self.my_paddle.height // 2,
             "vx": vx,
             "vy": vy,
-            "width": 5,
-            "height": 5
+            "width": 5*self.laser_size,
+            "height": 5*self.laser_size
         }
         
         self.lasers.append(laser)
@@ -165,6 +173,14 @@ class BouncingSimulator:
                     if ball_obj.health == 1:
                         self.ball_list.remove(ball_obj)
                         self.lasers.remove(laser)
+                        # Increment the score
+                        self.increase_score(points=ball_obj.default_health)
+                        if ball_obj.reward == "increase_shooting_speed":
+                            print("Shooting Speed Increased.")
+                            self.laser_delay -= 1
+                        if ball_obj.reward == "shooting_upgrade":
+                            print("Increase Shooting Size.")
+                            self.laser_size += 1
                     else:
                         ball_obj.health -= 1
                         self.lasers.remove(laser)
@@ -194,9 +210,11 @@ class BouncingSimulator:
         turtle.penup()
         turtle.goto(0, 50)
         turtle.color("black")
-        turtle.write("Bouncing Ball Simulator", align="center", font=("Arial", 24, "bold"))
+        turtle.write("Tower Defence Demo", align="center", font=("Arial", 24, "bold"))
         turtle.goto(0, -50)
         turtle.write("Press 'P' to Play", align="center", font=("Arial", 18, "normal"))
+        turtle.goto(0, -100)
+        turtle.write("Munyin Sam 6710545962", align="center", font=("Arial", 12, "bold"))
         turtle.hideturtle()
         turtle.update()
 
@@ -204,6 +222,43 @@ class BouncingSimulator:
         self.screen.listen()
         self.screen.onkey(self.run, "p")
         self.screen.mainloop()
+
+    def setup_score_display(self):
+        self.score_writer.hideturtle()
+        self.score_writer.penup()
+        self.score_writer.goto(-360, 270)
+        self.update_score_display()
+
+    def update_score_display(self):
+        self.score_writer.clear() 
+        self.score_writer.write(f"Score: {self.score}", align="left", font=("Arial", 16, "bold"))
+
+    def increase_score(self, points=1):
+        self.score += points
+        self.update_score_display()
+
+    def setup_level_display(self):
+        self.level_writer.hideturtle()
+        self.level_writer.penup()
+        self.level_writer.goto(280, 270)
+        self.update_level_display()
+
+    def update_level_display(self):
+        self.level_writer.clear() 
+        self.level_writer.write(f"Level: {self.level}", align="left", font=("Arial", 16, "bold"))
+
+    def update_level(self):
+        self.update_score_display()
+
+    def setup_notes_display(self, tips):
+        self.level_notes.hideturtle()
+        self.level_notes.penup()
+        self.level_notes.goto(0, -300)
+        self.level_notes.clear()
+        self.level_notes.write(f"Tip: {tips}", align="center", font=("Arial", 12, "bold"))
+    
+    def clear_notes(self):
+        self.level_notes.clear()
 
     # updates priority queue with all new events for a_ball
     def __predict(self, a_ball):
@@ -277,10 +332,10 @@ class BouncingSimulator:
         heapq.heappush(self.pq, my_event.Event(0, None, None, None))
 
         self.screen.listen()
-        self.screen.onkey(self.move_left, "Left")
-        self.screen.onkey(self.move_right, "Right")
-        self.screen.onkey(self.move_up, "Up")
-        self.screen.onkey(self.move_down, "Down")
+        # self.screen.onkey(self.move_left, "Left")
+        # self.screen.onkey(self.move_right, "Right")
+        # self.screen.onkey(self.move_up, "Up")
+        # self.screen.onkey(self.move_down, "Down")
 
         lose_radius = 48  # Radius around the center where "You Lose" is triggered
 
@@ -291,7 +346,11 @@ class BouncingSimulator:
 
             ball_a = e.a
             ball_b = e.b
-            paddle_a = e.paddle         
+            paddle_a = e.paddle
+            self.setup_score_display()
+            self.setup_level_display()
+            if self.level == 1:
+                self.setup_notes_display("Don't let the ball hit you. Press LMB to shoot")
 
             for i in range(len(self.ball_list)):
                 self.ball_list[i].move(e.time - self.t)
@@ -321,51 +380,77 @@ class BouncingSimulator:
             # self.__paddle_predict()
 
             if self.t > 1000 and self.level == 1:
+
                 self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
                 self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
-                self.laser_delay = 0.25
                 self.level+=1
+                self.update_level()
+                self.setup_notes_display("Blue balls are fast! Be aware.")
                 print("Level 2")
+                
 
             if self.t > 2000 and self.level == 2:
                 self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=8)
-                self.laser_delay = 0.25
+                self.spawn_ball(size=0.06, input_speed=0.7, color=(0, 128, 0), amount=1, reward="increase_shooting_speed")
                 self.level+=1
+                self.update_level()
+                self.setup_notes_display("Shooting green balls make you shoot faster.")
                 print("Level 3")
 
             if self.t > 3000 and self.level == 3:
+
                 self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
                 self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
                 self.spawn_ball(size=0.05, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
-                self.laser_delay = 0.15
+                self.spawn_ball(size=0.06, input_speed=0.7, color=(0, 255, 255), amount=1, reward="shooting_upgrade")
+                self.setup_notes_display("Try shooting different kinds of ball to get an upgrade. Goodluck have fun!")
                 self.level+=1
                 print("Level 3")
 
             if self.t > 4300 and self.level == 4:
+
                 self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
                 self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
                 self.spawn_ball(size=0.05, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
-                self.spawn_ball(size=0.1, input_speed=0.3, color=(128, 0, 128), amount=1, health=10)
-                self.laser_delay = 0.1
+                self.spawn_ball(size=0.12, input_speed=0.35, color=(128, 0, 128), amount=1, health=21)
                 self.level+=1
+                self.update_level()
+                self.clear_notes()
                 print("Level 4")
+            
+            if self.score == 100:
+                self.show_win_message()
 
         turtle.done()
 
     def show_lose_message(self):
-        """Clears the screen, including the paddle, displays the 'You Lose' message, and pauses before closing."""
-        turtle.clear()  # Clear everything drawn by the main turtle
-        self.my_paddle.my_turtle.clear()  # Clear the paddle's drawings
-        self.my_paddle.my_turtle.hideturtle()  # Hide the paddle turtle
+        turtle.clear()
+        self.my_paddle.my_turtle.clear()
+        self.my_paddle.my_turtle.hideturtle()
         turtle.penup()
         turtle.hideturtle()
-        self.screen.bgcolor("black")  # Optional: set a background color
-        turtle.color("red")  # Set text color
+        self.screen.bgcolor("white")
+        turtle.color("red")
         turtle.goto(0, 0)
         turtle.write("You Lose!", align="center", font=("Arial", 36, "bold"))
         turtle.update()
-        time.sleep(1)  # Pause for 3 seconds
-        turtle.bye()  # Close the Turtle graphics window
+        time.sleep(1) 
+        turtle.bye()
+
+    def show_win_message(self):
+        turtle.clear()
+        self.my_paddle.my_turtle.clear()
+        self.my_paddle.my_turtle.hideturtle()
+        turtle.penup()
+        turtle.hideturtle()
+        self.screen.bgcolor("white")
+        turtle.goto(0, 0)
+        turtle.write("Congrats! You Win.", align="center", font=("Arial", 36, "bold"))
+        turtle.goto(0, -50)
+        turtle.write("Munyin Sam 6710545962", align="center", font=("Arial", 12, "bold"))
+        turtle.update()
+        time.sleep(2)  
+        turtle.bye()
 
 # Start the application
 num_balls = 10
