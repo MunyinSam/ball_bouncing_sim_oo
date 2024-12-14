@@ -391,7 +391,7 @@ class BouncingSimulator:
 
             if self.t > 2000 and self.level == 2:
                 self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=8)
-                self.spawn_ball(size=0.06, input_speed=0.7, color=(0, 128, 0), amount=1, reward="increase_shooting_speed")
+                self.spawn_ball(size=0.06, input_speed=0.65, color=(0, 128, 0), amount=1, reward="increase_shooting_speed")
                 self.level+=1
                 self.update_level()
                 self.setup_notes_display("Shooting green balls make you shoot faster.")
@@ -401,7 +401,7 @@ class BouncingSimulator:
 
                 self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
                 self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
-                self.spawn_ball(size=0.05, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
+                self.spawn_ball(size=0.07, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
                 self.spawn_ball(size=0.06, input_speed=0.7, color=(0, 255, 255), amount=1, reward="shooting_upgrade")
                 self.setup_notes_display("Try shooting different kinds of ball to get an upgrade. Goodluck have fun!")
                 self.level+=1
@@ -411,7 +411,7 @@ class BouncingSimulator:
 
                 self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
                 self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
-                self.spawn_ball(size=0.05, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
+                self.spawn_ball(size=0.07, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
                 self.spawn_ball(size=0.12, input_speed=0.35, color=(128, 0, 128), amount=1, health=21)
                 self.level+=1
                 self.update_level()
@@ -449,7 +449,7 @@ class BouncingSimulator:
         turtle.goto(0, -50)
         turtle.write("Munyin Sam 6710545962", align="center", font=("Arial", 12, "bold"))
         turtle.update()
-        time.sleep(2)  
+        time.sleep(7)  
         turtle.bye()
 
 # Start the application
