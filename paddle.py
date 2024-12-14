@@ -18,16 +18,16 @@ class Paddle:
         self.my_turtle.color(self.color)
         self.my_turtle.pensize(5)
         self.my_turtle.pencolor("black")
-        self.my_turtle.setheading(0)  # Make sure the turtle faces right
+        self.my_turtle.setheading(0)  # Make sure
 
-        # Begin drawing the hexagon
+        # hexagon
         self.my_turtle.pendown()
         self.my_turtle.begin_fill()
 
         # Draw the hexagon (6 sides)
         for _ in range(6):
             self.my_turtle.forward(self.width)  # Length of each side
-            self.my_turtle.left(60)  # 60-degree turn for a hexagon
+            self.my_turtle.left(60)
 
         self.my_turtle.end_fill()
         self.my_turtle.penup()

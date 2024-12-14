@@ -156,7 +156,7 @@ class BouncingSimulator:
         self.last_laser_time = current_time
 
     def update_lasers(self):
-        """Moves lasers and checks for collisions with balls."""
+
         for laser in self.lasers[:]:
             laser["x"] += laser["vx"]
             laser["y"] += laser["vy"]
@@ -439,6 +439,7 @@ class BouncingSimulator:
 
     def show_win_message(self):
         turtle.clear()
+        self.score_writer.clear()
         self.my_paddle.my_turtle.clear()
         self.my_paddle.my_turtle.hideturtle()
         turtle.penup()
