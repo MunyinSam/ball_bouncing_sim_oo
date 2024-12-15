@@ -7,6 +7,7 @@ import paddle
 import time
 import math
 from ball import Ball
+from shop import Shop
 import tkinter as tk
 from tkinter import Toplevel, Label, Button
 import csv
@@ -16,6 +17,7 @@ class BouncingSimulator:
     def __init__(self, num_balls, level=1):
         self.num_balls = num_balls
         self.ball_list = []
+        self.root = tk.Tk()
         self.lasers = []
         self.t = 0.0
         self.pq = []
@@ -24,8 +26,8 @@ class BouncingSimulator:
         turtle.tracer(0)
         turtle.hideturtle()
         turtle.colormode(255)
-        self.canvas_width = 420
-        self.canvas_height = 340
+        self.canvas_width = 400
+        self.canvas_height = 320
 
         self.gamemode = "classic"
         self.done = False
@@ -34,8 +36,12 @@ class BouncingSimulator:
         self.last_laser_time = 0  # Time when the last laser was fired
         self.laser_size = 1
 
-        self.player_max_health = 3
-        self.player_current_health = 3
+        # Instantiate the Shop class
+        self.shop = Shop(self.root, self.coins, self.laser_delay, self.laser_size, 
+                         self.player_max_health, self.player_current_health)
+
+        self.player_max_health = 100
+        self.player_current_health = 100
 
         self.ball_spawn_interval = 2  # Interval to spawn a ball
         self.last_ball_time = 0  # Time when the last ball was spawned
@@ -67,6 +73,12 @@ class BouncingSimulator:
         # open the shop
         self.open_shop()
 
+    def open_shop(self):
+        self.shop.open_shop()  # Open the shop window from the Shop class
+
+    def clear_shop(self):
+        self.shop.clear_shop_window()
+
     # Spawn Balls -------------------------------
 
     def spawn_ball(self, size=0.05, input_speed=0.5, color=(255, 0, 0), amount=1, health=1, reward=None):
@@ -74,58 +86,58 @@ class BouncingSimulator:
         min_distance = ball_radius * 2  # Minimum distance between balls (twice the radius to avoid overlap)
         max_attempts = 100  # Maximum attempts to find a valid position for the ball
 
-        min_distance_from_center = 100  # Minimum distance from the center
-        min_distance_from_wall = ball_radius + 50  # Ensure ball spawns at least this far from walls
+        min_distance_from_center = 100 
 
-        # List of existing ball positions to check for overlaps
+        # List of the coordinates of all existing balls to check for overlaps
         existing_ball_positions = [(ball.x, ball.y) for ball in self.ball_list]
 
-        for _ in range(amount):
+        for i in range(amount):
             attempts = 0
             while attempts < max_attempts:
                 # Randomly choose an edge: 0 = top, 1 = bottom, 2 = left, 3 = right
                 edge = random.randint(0, 3)
-
+                
                 if edge == 0:  # Top edge
-                    x = random.uniform(-self.canvas_width + min_distance_from_wall, self.canvas_width - min_distance_from_wall)
-                    y = self.canvas_height - min_distance_from_wall
+                    x = random.uniform(-self.canvas_width, self.canvas_width)
+                    y = self.canvas_height
                 elif edge == 1:  # Bottom edge
-                    x = random.uniform(-self.canvas_width + min_distance_from_wall, self.canvas_width - min_distance_from_wall)
-                    y = -self.canvas_height + min_distance_from_wall
+                    x = random.uniform(-self.canvas_width, self.canvas_width)
+                    y = -self.canvas_height
                 elif edge == 2:  # Left edge
-                    x = -self.canvas_width + min_distance_from_wall
-                    y = random.uniform(-self.canvas_height + min_distance_from_wall, self.canvas_height - min_distance_from_wall)
+                    x = -self.canvas_width
+                    y = random.uniform(-self.canvas_height, self.canvas_height)
                 else:  # Right edge
-                    x = self.canvas_width - min_distance_from_wall
-                    y = random.uniform(-self.canvas_height + min_distance_from_wall, self.canvas_height - min_distance_from_wall)
+                    x = self.canvas_width
+                    y = random.uniform(-self.canvas_height, self.canvas_height)
 
-                # Check if the ball is too close to the center
+                # Check if the ball is too close to the center, if so, move it further out
                 if abs(x) < min_distance_from_center and abs(y) < min_distance_from_center:
-                    continue  # Skip this position and try again
+                    if edge == 0 or edge == 1:
+                        y += min_distance_from_center  # Move ball along the Y-axis
+                    else:
+                        x += min_distance_from_center  # Move ball along the X-axis
 
-                # Check for overlaps with existing balls
+                # Check if the new ball position overlaps with any existing balls
                 overlap = False
                 for (existing_x, existing_y) in existing_ball_positions:
                     distance = math.sqrt((existing_x - x) ** 2 + (existing_y - y) ** 2)
-                    if distance < min_distance:
+                    if distance < min_distance:  # If distance is too small, it's considered overlapping
                         overlap = True
                         break
 
                 if not overlap:
-                    # Calculate velocity directed toward the center
-                    direction = math.sqrt(x**2 + y**2)
-                    vx = input_speed * (-x / direction)
-                    vy = input_speed * (-y / direction)
+                    direction = math.sqrt(x**2 + y**2)  # Distance from the edge to the center
+                    vx = input_speed * (-x / direction)  # Horizontal velocity
+                    vy = input_speed * (-y / direction)  # Vertical velocity
 
-                    # Create and append the new ball
                     new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list), health=health, reward=reward)
                     self.ball_list.append(new_ball)
                     existing_ball_positions.append((x, y))
+                    
                     print("Ball appended at position:", x, y)
                     break
-
-                attempts += 1
-
+                else:
+                    attempts += 1
     # Lasers -------------------------------
 
     def shoot_laser(self, x, y):
@@ -161,7 +173,8 @@ class BouncingSimulator:
         self.lasers.append(laser)
         self.last_laser_time = current_time
 
-    def update_lasers(self, speed_cap=1):
+    def update_lasers(self):
+
         for laser in self.lasers[:]:
             laser["x"] += laser["vx"]
             laser["y"] += laser["vy"]
@@ -175,50 +188,23 @@ class BouncingSimulator:
             for ball_obj in self.ball_list[:]:
                 if (abs(laser["x"] - ball_obj.x) < ball_obj.radius + laser["width"] / 2 and
                         abs(laser["y"] - ball_obj.y) < ball_obj.radius + laser["height"] / 2):
-                    # Calculate reflection
-                    dx = laser["x"] - ball_obj.x
-                    dy = laser["y"] - ball_obj.y
-                    magnitude = math.sqrt(dx**2 + dy**2)
-                    
-                    if magnitude != 0:
-                        # Normalize the collision vector
-                        dx /= magnitude
-                        dy /= magnitude
-
-                    # Reflect the laser velocity
-                    dot_product = laser["vx"] * dx + laser["vy"] * dy
-                    laser["vx"] -= 2 * dot_product * dx
-                    laser["vy"] -= 2 * dot_product * dy
-
-                    # Cap the speed of the laser
-                    current_speed = math.sqrt(laser["vx"]**2 + laser["vy"]**2)
-                    if current_speed > speed_cap:
-                        scaling_factor = speed_cap / current_speed
-                        laser["vx"] *= scaling_factor
-                        laser["vy"] *= scaling_factor
-
-                    if ball_obj.health > 1:
-                        ball_obj.health -= 1
-                    else:
+                    if ball_obj.health == 1:
                         self.ball_list.remove(ball_obj)
+                        self.lasers.remove(laser)
+                        # Increment the score
                         self.score += ball_obj.default_health
                         self.coins += ball_obj.default_health*5
+
                         if ball_obj.reward == "increase_shooting_speed":
                             print("Shooting Speed Increased.")
                             self.laser_delay = self.laser_delay*0.8
                         if ball_obj.reward == "shooting_upgrade":
                             print("Increase Shooting Size.")
                             self.laser_size += 1
-
-                    # limit laser's lifetime by bounce count
-                    if "bounces" not in laser:
-                        laser["bounces"] = 0
-                    laser["bounces"] += 1
-                    if laser["bounces"] > 2:  
+                    else:
+                        ball_obj.health -= 1
                         self.lasers.remove(laser)
                     break
-
-
 
     def draw_lasers(self):
         for laser in self.lasers:
@@ -233,6 +219,8 @@ class BouncingSimulator:
                 turtle.forward(laser["height"])
                 turtle.left(90)
             turtle.end_fill()
+
+    # Updates
 
     # Menu
 
@@ -312,7 +300,7 @@ class BouncingSimulator:
 
         Label(self.shop_window, text="Upgrade Shop", font=("Arial", 16)).pack(pady=20)
 
-        items = [("Ball Shooting Speed", 100), ("Laser Size", 150),("Health Potion", 50)]
+        items = [("Ball Shooting Cooldown", 100), ("Laser Size", 150),("Health Potion", 50)]
         for item, price in items:
             Button(
                 self.shop_window,
@@ -355,10 +343,10 @@ class BouncingSimulator:
             heapq.heappush(self.pq, my_event.Event(self.t + dt, a_ball, self.ball_list[i], None))
         
         # particle-wall collisions
-        dtX = a_ball.time_to_hit_vertical_wall()
-        dtY = a_ball.time_to_hit_horizontal_wall()
-        heapq.heappush(self.pq, my_event.Event(self.t + dtX, a_ball, None, None))
-        heapq.heappush(self.pq, my_event.Event(self.t + dtY, None, a_ball, None))
+        # dtX = a_ball.time_to_hit_vertical_wall()
+        # dtY = a_ball.time_to_hit_horizontal_wall()
+        # heapq.heappush(self.pq, my_event.Event(self.t + dtX, a_ball, None, None))
+        # heapq.heappush(self.pq, my_event.Event(self.t + dtY, None, a_ball, None))
 
     def handle_level_up(self, level, spawn_info, notes_text):
         """Handles level up logic: spawning balls and updating level."""
@@ -411,12 +399,13 @@ class BouncingSimulator:
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
 
+
         if self.score >= 100:
             self.done = True
             self.show_win_message()
             return
 
-        if self.t > 6500:
+        if self.t > 6000:
             self.done = True
             self.show_lose_message()
             return
@@ -465,10 +454,11 @@ class BouncingSimulator:
             self.show_win_message()
             return
 
-        if self.t > 6500:
+        if self.t > 6000:
             self.done = True
             self.show_lose_message()
             return
+
 
     def __draw_border(self):
         turtle.penup()
@@ -507,6 +497,13 @@ class BouncingSimulator:
         for i in range(len(self.ball_list)):
             self.__predict(self.ball_list[i])
         heapq.heappush(self.pq, my_event.Event(0, None, None, None))
+
+        self.screen.listen()
+        # self.screen.onkey(self.move_left, "Left")
+        # self.screen.onkey(self.move_right, "Right")
+        # self.screen.onkey(self.move_up, "Up")
+        # self.screen.onkey(self.move_down, "Down")
+
         lose_radius = 48  # Radius around the center where "You Lose" is triggered
 
         while True:
@@ -551,7 +548,7 @@ class BouncingSimulator:
             # Bugged
 
             self.__predict(ball_a)
-            # self.__predict(ball_b)
+            self.__predict(ball_b)
             self.__paddle_predict()
             self.handle_gameplay()
             if self.done == True:
