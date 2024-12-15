@@ -1,7 +1,3 @@
-Here’s a more polished and formatted version of your project documentation:
-
----
-
 # **Bouncing Laser and Ball Tower Defence**
 
 Inspired by *"The Tower"* by Munyin Sam (6710545962)
