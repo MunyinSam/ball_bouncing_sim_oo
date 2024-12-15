@@ -55,6 +55,10 @@ class Ball:
         fx = magnitude * dx / dist
         fy = magnitude * dy / dist
 
+        if fx > 1:
+            fx = 1
+        if fy > 1:
+            fy = 1
         # update velocities according to normal force
         self.vx += fx / self.mass
         self.vy += fy / self.mass

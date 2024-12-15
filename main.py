@@ -28,13 +28,14 @@ class BouncingSimulator:
         self.canvas_height = 320
 
         self.gamemode = "classic"
+        self.done = False
 
         self.laser_delay = 0.4
         self.last_laser_time = 0  # Time when the last laser was fired
         self.laser_size = 1
 
-        self.player_max_health = 3
-        self.player_current_health = 3
+        self.player_max_health = 100
+        self.player_current_health = 100
 
         self.ball_spawn_interval = 2  # Interval to spawn a ball
         self.last_ball_time = 0  # Time when the last ball was spawned
@@ -45,44 +46,17 @@ class BouncingSimulator:
         self.coins = 0
         self.score = 0  # Initial score
         self.level = level
+        self.level_notes_text = "LMB to shoot"
+        self.coin_writer = turtle.Turtle()
         self.score_writer = turtle.Turtle()
+        self.health_writer = turtle.Turtle()
         self.level_writer = turtle.Turtle()
         self.level_notes = turtle.Turtle()
-        self.coin_writer = turtle.Turtle()
-        self.health_writer = turtle.Turtle()
 
         # Spawning the first wave balls
-
-        ball_radius = 0.05 * self.canvas_width
-        for i in range(self.num_balls):
-            # Randomly choose an edge: 0 = top, 1 = bottom, 2 = left, 3 = right
-            edge = random.randint(0, 3)
-            if edge == 0:  # Top edge
-                x = random.uniform(-self.canvas_width, self.canvas_width)
-                y = self.canvas_height
-            elif edge == 1:  # Bottom edge
-                x = random.uniform(-self.canvas_width, self.canvas_width)
-                y = -self.canvas_height
-            elif edge == 2:  # Left edge
-                x = -self.canvas_width
-                y = random.uniform(-self.canvas_height, self.canvas_height)
-            else:  # Right edge
-                x = self.canvas_width
-                y = random.uniform(-self.canvas_height, self.canvas_height)
-
-            # Speed and direction toward the center
-            speed = 0.5
-            direction = ((-x) ** 2 + (-y) ** 2) ** 0.5
-            vx = speed * (-x / direction)
-            vy = speed * (-y / direction)
-
-            # Random color for each ball
-            ball_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            ball_color = (255, 0, 0)
-            self.ball_list.append(ball.Ball(ball_radius, x, y, vx, vy, ball_color, i))
+        self.spawn_ball(amount=10)
 
         # Player 
-
         tom = turtle.Turtle()
         self.my_paddle = paddle.Paddle(50, 50, (37, 150, 190), tom)
         self.my_paddle.set_location([0, 0])
@@ -93,57 +67,70 @@ class BouncingSimulator:
         # open the shop
         self.open_shop()
 
-    # Tom -----------------
-
     # Spawn Balls -------------------------------
-    
+
     def spawn_ball(self, size=0.05, input_speed=0.5, color=(255, 0, 0), amount=1, health=1, reward=None):
         ball_radius = size * self.canvas_width  # Ball radius based on size
+        min_distance = ball_radius * 2  # Minimum distance between balls (twice the radius to avoid overlap)
+        max_attempts = 100  # Maximum attempts to find a valid position for the ball
 
-        # Minimum distance from the center (to avoid spawning in the lose radius)
-        min_distance_from_center = 100  # Adjust this value to ensure balls aren't too close to the center
-        
+        min_distance_from_center = 100 
+
+        # List of the coordinates of all existing balls to check for overlaps
+        existing_ball_positions = [(ball.x, ball.y) for ball in self.ball_list]
+
         for i in range(amount):
-            # Randomly choose an edge: 0 = top, 1 = bottom, 2 = left, 3 = right
-            edge = random.randint(0, 3)
-            
-            if edge == 0:  # Top edge
-                x = random.uniform(-self.canvas_width, self.canvas_width)
-                y = self.canvas_height
-            elif edge == 1:  # Bottom edge
-                x = random.uniform(-self.canvas_width, self.canvas_width)
-                y = -self.canvas_height
-            elif edge == 2:  # Left edge
-                x = -self.canvas_width
-                y = random.uniform(-self.canvas_height, self.canvas_height)
-            else:  # Right edge
-                x = self.canvas_width
-                y = random.uniform(-self.canvas_height, self.canvas_height)
+            attempts = 0
+            while attempts < max_attempts:
+                # Randomly choose an edge: 0 = top, 1 = bottom, 2 = left, 3 = right
+                edge = random.randint(0, 3)
+                
+                if edge == 0:  # Top edge
+                    x = random.uniform(-self.canvas_width, self.canvas_width)
+                    y = self.canvas_height
+                elif edge == 1:  # Bottom edge
+                    x = random.uniform(-self.canvas_width, self.canvas_width)
+                    y = -self.canvas_height
+                elif edge == 2:  # Left edge
+                    x = -self.canvas_width
+                    y = random.uniform(-self.canvas_height, self.canvas_height)
+                else:  # Right edge
+                    x = self.canvas_width
+                    y = random.uniform(-self.canvas_height, self.canvas_height)
 
-            # Check if the ball is too close to the center, if so, move it further out
-            if abs(x) < min_distance_from_center and abs(y) < min_distance_from_center:
-                if edge == 0 or edge == 1:
-                    y += min_distance_from_center  # Move ball along the Y-axis
+                # Check if the ball is too close to the center, if so, move it further out
+                if abs(x) < min_distance_from_center and abs(y) < min_distance_from_center:
+                    if edge == 0 or edge == 1:
+                        y += min_distance_from_center  # Move ball along the Y-axis
+                    else:
+                        x += min_distance_from_center  # Move ball along the X-axis
+
+                # Check if the new ball position overlaps with any existing balls
+                overlap = False
+                for (existing_x, existing_y) in existing_ball_positions:
+                    distance = math.sqrt((existing_x - x) ** 2 + (existing_y - y) ** 2)
+                    if distance < min_distance:  # If distance is too small, it's considered overlapping
+                        overlap = True
+                        break
+
+                if not overlap:
+                    direction = math.sqrt(x**2 + y**2)  # Distance from the edge to the center
+                    vx = input_speed * (-x / direction)  # Horizontal velocity
+                    vy = input_speed * (-y / direction)  # Vertical velocity
+
+                    new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list), health=health, reward=reward)
+                    self.ball_list.append(new_ball)
+                    existing_ball_positions.append((x, y))
+                    
+                    print("Ball appended at position:", x, y)
+                    break
                 else:
-                    x += min_distance_from_center  # Move ball along the X-axis
-
-            # Calculate speed and direction towards the center of the screen
-            direction = math.sqrt(x**2 + y**2)  # Distance from the edge to the center
-            vx = input_speed * (-x / direction)  # Horizontal velocity
-            vy = input_speed * (-y / direction)  # Vertical velocity
-
-            # Create a new Ball object and add it to the ball list
-            new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list), health=health, reward=reward)
-            self.ball_list.append(new_ball)
-            print("Ball appended at position:", x, y)
-
+                    attempts += 1
     # Lasers -------------------------------
 
     def shoot_laser(self, x, y):
-        """Shoots a laser from the paddle's current position towards the mouse."""
         # Calculate the direction of the laser towards the mouse position
-
-        current_time = time.time()  # Get the current time in seconds
+        current_time = time.time() 
         if current_time - self.last_laser_time < self.laser_delay:
             return  # Don't fire a laser if the delay has not passed
         paddle_x, paddle_y = self.my_paddle.location
@@ -156,14 +143,12 @@ class BouncingSimulator:
             dx /= magnitude
             dy /= magnitude
         
-        # Laser speed
         laser_speed = 10
         
         # Velocity of the laser
         vx = dx * laser_speed
         vy = dy * laser_speed
         
-        # Create the laser object
         laser = {
             "x": paddle_x,
             "y": paddle_y + self.my_paddle.height // 2,
@@ -195,7 +180,7 @@ class BouncingSimulator:
                         self.ball_list.remove(ball_obj)
                         self.lasers.remove(laser)
                         # Increment the score
-                        self.increase_score(points=ball_obj.default_health)
+                        self.score += ball_obj.default_health
                         self.coins += ball_obj.default_health*5
 
                         if ball_obj.reward == "increase_shooting_speed":
@@ -259,60 +244,36 @@ class BouncingSimulator:
 
     # Setting Up Displays (set_display())
 
-    def setup_coin_display(self):
-        self.coin_writer.hideturtle()
-        self.coin_writer.penup()
-        self.coin_writer.goto(-360, 240) 
-        self.update_coin_display()
+    def setup_display(self):
+        self.display_elements = {
+            "coins": {"writer": self.coin_writer, "position": (-360, 240), "text": f"Coins: {self.coins}"},
+            "score": {"writer": self.score_writer, "position": (-360, 270), "text": f"Score: {self.score}"},
+            "health": {"writer": self.health_writer, "position": (-24, 50), "text": f"HP: {self.player_current_health}"},
+            "level": {"writer": self.level_writer, "position": (280, 270), "text": f"Level: {self.level}"},
+            "notes": {"writer": self.level_notes, "position": (0, -300), "text": f"Tip: {self.level_notes_text}"}
+        }
+        
+        for key, value in self.display_elements.items():
+            value["writer"].hideturtle()
+            value["writer"].penup()
+            value["writer"].goto(value["position"])
+            self.update_display(key)
 
-    def update_coin_display(self):
-        self.coin_writer.clear()
-        self.coin_writer.write(f"Coins: {self.coins}", align="left", font=("Arial", 16, "bold"))
-
-    def setup_score_display(self):
-        self.score_writer.hideturtle()
-        self.score_writer.penup()
-        self.score_writer.goto(-360, 270)
-        self.update_score_display()
-
-    def update_score_display(self):
-        self.score_writer.clear() 
-        self.score_writer.write(f"Score: {self.score}", align="left", font=("Arial", 16, "bold"))
-
-    def setup_health_display(self):
-        self.health_writer.hideturtle()
-        self.health_writer.penup()
-        self.health_writer.goto(0, 50)
-        self.update_health_display()
-    
-    def update_health_display(self):
-        self.health_writer.clear() 
-        self.health_writer.write(f"HP: {self.player_current_health}", align="center", font=("Arial", 12, "bold"))
-
-    def increase_score(self, points=1):
-        self.score += points
-        self.update_score_display()
-
-    def setup_level_display(self):
-        self.level_writer.hideturtle()
-        self.level_writer.penup()
-        self.level_writer.goto(280, 270)
-        self.update_level_display()
-
-    def update_level_display(self):
-        self.level_writer.clear() 
-        self.level_writer.write(f"Level: {self.level}", align="left", font=("Arial", 16, "bold"))
+    def update_display(self, element):
+        writer = self.display_elements[element]["writer"]
+        text = self.display_elements[element]["text"]
+        writer.clear()
+        writer.write(text, align="left" if element != ("notes" or "health") else "center", font=("Arial", 14, "bold"))
 
     def update_level(self):
-        self.update_score_display()
+        self.display_elements["level"]["text"] = f"Level: {self.level}"
+        self.update_display("level")
 
     def setup_notes_display(self, tips):
-        self.level_notes.hideturtle()
-        self.level_notes.penup()
-        self.level_notes.goto(0, -300)
-        self.level_notes.clear()
-        self.level_notes.write(f"Tip: {tips}", align="center", font=("Arial", 12, "bold"))
-    
+        self.level_notes_text = tips  # Update the level notes
+        self.display_elements["notes"]["text"] = f"Tip: {tips}"
+        self.update_display("notes")
+
     def clear_notes(self):
         self.level_notes.clear()
 
@@ -370,10 +331,122 @@ class BouncingSimulator:
             heapq.heappush(self.pq, my_event.Event(self.t + dt, a_ball, self.ball_list[i], None))
         
         # particle-wall collisions
-        dtX = a_ball.time_to_hit_vertical_wall()
-        dtY = a_ball.time_to_hit_horizontal_wall()
-        heapq.heappush(self.pq, my_event.Event(self.t + dtX, a_ball, None, None))
-        heapq.heappush(self.pq, my_event.Event(self.t + dtY, None, a_ball, None))
+        # dtX = a_ball.time_to_hit_vertical_wall()
+        # dtY = a_ball.time_to_hit_horizontal_wall()
+        # heapq.heappush(self.pq, my_event.Event(self.t + dtX, a_ball, None, None))
+        # heapq.heappush(self.pq, my_event.Event(self.t + dtY, None, a_ball, None))
+
+    def handle_level_up(self, level, spawn_info, notes_text):
+        """Handles level up logic: spawning balls and updating level."""
+        for ball_info in spawn_info:
+            self.spawn_ball(**ball_info)
+        self.level += 1
+        self.update_level()
+        self.setup_notes_display(notes_text)
+    
+    def handle_gameplay(self):
+        if self.gamemode == "classic":
+            self.handle_normal_gameplay()
+        elif self.gamemode == "fast":
+            self.handle_fast_gameplay()
+
+    def handle_normal_gameplay(self):
+        if self.t > 1000 and self.level == 1:
+            spawn_info = [
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": 3},
+            ]
+            self.handle_level_up(1, spawn_info, "Blue balls are fast! Be aware.")
+            print("Level 2")
+        
+        if self.t > 2000 and self.level == 2:
+            spawn_info = [
+                {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": 7},
+                {"size": 0.06, "input_speed": 0.65, "color": (0, 128, 0), "amount": 1, "reward": "increase_shooting_speed"},
+            ]
+            self.handle_level_up(2, spawn_info, "Shooting green balls make you shoot faster.")
+            print("Level 3")
+
+        if self.t > 3000 and self.level == 3:
+            spawn_info = [
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": 3},
+                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 2},
+                {"size": 0.06, "input_speed": 0.7, "color": (0, 255, 255), "amount": 1, "reward": "shooting_upgrade"},
+            ]
+            self.handle_level_up(3, spawn_info, "Try shooting different kinds of ball to get an upgrade. Goodluck have fun!")
+            print("Level 3")
+
+        if self.t > 4300 and self.level == 4:
+            spawn_info = [
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": 3},
+                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 2},
+                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 21},
+            ]
+            self.handle_level_up(4, spawn_info, "")
+            print("Level 4")
+
+
+        if self.score >= 100:
+            self.done = True
+            self.show_win_message()
+            return
+
+        if self.t > 6000:
+            self.done = True
+            self.show_lose_message()
+            return
+
+    def handle_fast_gameplay(self):
+        if self.t > 1000 and self.level == 1:
+            spawn_info = [
+                {"size": 0.05, "input_speed": 0.6, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 5},
+                {"size": 0.06, "input_speed": 0.65, "color": (0, 128, 0), "amount": 3, "reward": "increase_shooting_speed"},
+            ]
+            self.handle_level_up(1, spawn_info, "Blue balls are fast! Be aware.")
+            print("Level 2")
+
+        if self.t > 2000 and self.level == 2:
+            spawn_info = [
+                {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 15},
+                {"size": 0.06, "input_speed": 0.65, "color": (0, 128, 0), "amount": 2, "reward": "increase_shooting_speed"},
+                {"size": 0.06, "input_speed": 0.7, "color": (0, 255, 255), "amount": 1, "reward": "shooting_upgrade"},
+            ]
+            self.handle_level_up(2, spawn_info, "Shooting green balls make you shoot faster.")
+            print("Level 3")
+
+        if self.t > 3000 and self.level == 3:
+            spawn_info = [
+                {"size": 0.05, "input_speed": 0.6, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 3},
+                {"size": 0.07, "input_speed": 0.6, "color": (0, 0, 0), "amount": 5, "health": 3},
+                {"size": 0.06, "input_speed": 0.65, "color": (0, 128, 0), "amount": 2, "reward": "increase_shooting_speed"},
+            ]
+            self.handle_level_up(3, spawn_info, "Try shooting different kinds of ball to get an upgrade. Goodluck have fun!")
+            print("Level 3")
+
+        if self.t > 4300 and self.level == 4:
+            spawn_info = [
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 3},
+                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 2},
+                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 21},
+            ]
+            self.handle_level_up(4, spawn_info, "")
+            print("Level 4")
+
+        if self.score >= 100:
+            self.done = True
+            self.show_win_message()
+            return
+
+        if self.t > 6000:
+            self.done = True
+            self.show_lose_message()
+            return
+
 
     def __draw_border(self):
         turtle.penup()
@@ -406,23 +479,6 @@ class BouncingSimulator:
             dtP = a_ball.time_to_hit_paddle(self.my_paddle)
             heapq.heappush(self.pq, my_event.Event(self.t + dtP, a_ball, None, self.my_paddle))
 
-    # move handlers
-    def move_left(self):
-        if (self.my_paddle.location[0] - self.my_paddle.width/2 - 40) >= -self.canvas_width:
-            self.my_paddle.set_location([self.my_paddle.location[0] - 40, self.my_paddle.location[1]])
-
-    def move_right(self):
-        if (self.my_paddle.location[0] + self.my_paddle.width/2 + 40) <= self.canvas_width:
-            self.my_paddle.set_location([self.my_paddle.location[0] + 40, self.my_paddle.location[1]])
-
-    def move_down(self):
-        if (self.my_paddle.location[1] - self.my_paddle.height/2 - 40) >= -self.canvas_height:
-            self.my_paddle.set_location([self.my_paddle.location[0], self.my_paddle.location[1] - 40])
-
-    def move_up(self):
-        if (self.my_paddle.location[1] + self.my_paddle.height/2 + 40) <= self.canvas_height:
-            self.my_paddle.set_location([self.my_paddle.location[0], self.my_paddle.location[1] + 40])
-
     def run(self):
         turtle.clear()
         # Initialize pq with collision events and redraw event
@@ -446,10 +502,7 @@ class BouncingSimulator:
             ball_a = e.a
             ball_b = e.b
             paddle_a = e.paddle
-            self.setup_score_display()
-            self.setup_level_display()
-            self.setup_coin_display()
-            self.setup_health_display()
+            self.setup_display()
 
             if self.level == 1:
                 self.setup_notes_display("Don't let the ball hit you. Press LMB to shoot")
@@ -482,109 +535,12 @@ class BouncingSimulator:
 
             # Bugged
 
-            # self.__predict(ball_a)
-            # self.__predict(ball_b)
-            # self.__paddle_predict()
-
-            if self.gamemode == "classic":
-
-                if self.t > 1000 and self.level == 1:
-
-                    self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
-                    self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
-                    self.level+=1
-                    self.update_level()
-                    self.setup_notes_display("Blue balls are fast! Be aware.")
-                    print("Level 2")
-                    
-
-                if self.t > 2000 and self.level == 2:
-                    self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=7)
-                    self.spawn_ball(size=0.06, input_speed=0.65, color=(0, 128, 0), amount=1, reward="increase_shooting_speed")
-                    self.level+=1
-                    self.update_level()
-                    self.setup_notes_display("Shooting green balls make you shoot faster.")
-                    print("Level 3")
-
-                if self.t > 3000 and self.level == 3:
-
-                    self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
-                    self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
-                    self.spawn_ball(size=0.07, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
-                    self.spawn_ball(size=0.06, input_speed=0.7, color=(0, 255, 255), amount=1, reward="shooting_upgrade")
-                    self.setup_notes_display("Try shooting different kinds of ball to get an upgrade. Goodluck have fun!")
-                    self.level+=1
-                    print("Level 3")
-
-                if self.t > 4300 and self.level == 4:
-
-                    self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
-                    self.spawn_ball(size=0.03, input_speed=1, color=(0, 0, 139), amount=3)
-                    self.spawn_ball(size=0.07, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
-                    self.spawn_ball(size=0.12, input_speed=0.35, color=(128, 0, 128), amount=1, health=21)
-                    self.level+=1
-                    self.update_level()
-                    self.clear_notes()
-                    print("Level 4")
-                
-                if self.score >= 100:
-                    self.show_win_message()
-                    return
-                
-                if self.t > 6000:
-                    self.show_lose_message()
-                    return
-                
-            elif self.gamemode == "fast":
-
-                if self.t > 1000 and self.level == 1:
-
-                    self.spawn_ball(size=0.05, input_speed=0.6, color=(255, 0, 0), amount=10)
-                    self.spawn_ball(size=0.03, input_speed=1.2, color=(0, 0, 139), amount=5)
-                    self.spawn_ball(size=0.06, input_speed=0.65, color=(0, 128, 0), amount=3, reward="increase_shooting_speed")
-                    self.level+=1
-                    self.update_level()
-                    self.setup_notes_display("Blue balls are fast! Be aware.")
-                    print("Level 2")
-                    
-
-                if self.t > 2000 and self.level == 2:
-                    self.spawn_ball(size=0.03, input_speed=1.2, color=(0, 0, 139), amount=15)
-                    self.spawn_ball(size=0.06, input_speed=0.65, color=(0, 128, 0), amount=2, reward="increase_shooting_speed")
-                    self.spawn_ball(size=0.06, input_speed=0.7, color=(0, 255, 255), amount=1, reward="shooting_upgrade")
-                    self.level+=1
-                    self.update_level()
-                    self.setup_notes_display("Shooting green balls make you shoot faster.")
-                    print("Level 3")
-
-                if self.t > 3000 and self.level == 3:
-
-                    self.spawn_ball(size=0.05, input_speed=0.6, color=(255, 0, 0), amount=10)
-                    self.spawn_ball(size=0.03, input_speed=1.2, color=(0, 0, 139), amount=3)
-                    self.spawn_ball(size=0.07, input_speed=0.6, color=(0, 0, 0), amount=5, health=3)
-                    self.spawn_ball(size=0.06, input_speed=0.65, color=(0, 128, 0), amount=2, reward="increase_shooting_speed")
-                    self.setup_notes_display("Try shooting different kinds of ball to get an upgrade. Goodluck have fun!")
-                    self.level+=1
-                    print("Level 3")
-
-                if self.t > 4300 and self.level == 4:
-
-                    self.spawn_ball(size=0.05, input_speed=0.5, color=(255, 0, 0), amount=10)
-                    self.spawn_ball(size=0.03, input_speed=1.2, color=(0, 0, 139), amount=3)
-                    self.spawn_ball(size=0.07, input_speed=0.5, color=(0, 0, 0), amount=5, health=2)
-                    self.spawn_ball(size=0.12, input_speed=0.35, color=(128, 0, 128), amount=1, health=21)
-                    self.level+=1
-                    self.update_level()
-                    self.clear_notes()
-                    print("Level 4")
-                
-                if self.score >= 117:
-                    self.show_win_message()
-                    return
-                
-                if self.t > 6000:
-                    self.show_lose_message()
-                    return
+            self.__predict(ball_a)
+            self.__predict(ball_b)
+            self.__paddle_predict()
+            self.handle_gameplay()
+            if self.done == True:
+                break
 
         turtle.done()
 
@@ -633,7 +589,6 @@ class BouncingSimulator:
 
         turtle.clear()
         self.clear_screen()
-
         turtle.penup()
         turtle.goto(0, 0)
         turtle.write("Congrats! You Win.", align="center", font=("Arial", 36, "bold"))
@@ -643,7 +598,6 @@ class BouncingSimulator:
         turtle.write("Munyin Sam 6710545962", align="center", font=("Arial", 12, "bold"))
         turtle.hideturtle()
         turtle.update()
-
         self.screen.listen()
         self.screen.onkey(self.restart_game, "r")
         self.screen.onkey(self.quit_game, "q")
@@ -652,20 +606,15 @@ class BouncingSimulator:
 
         file_path = 'game_scores.csv'
         finish_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
         row = [player_name, score, finish_time]
-
         # Open the CSV file in append mode
         with open(file_path, mode='a', newline='') as file:
             writer = csv.writer(file)
-            
             # If the file is empty, write the header
             if file.tell() == 0:
                 writer.writerow(['Player Name', 'Score', 'Finish Time'])
-
             # Write the score data
             writer.writerow(row)
-
         print(f"Score for {player_name} updated: {score}")
 
 # Start the application

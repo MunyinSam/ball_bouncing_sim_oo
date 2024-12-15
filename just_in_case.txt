@@ -1,0 +1,16 @@
+    # move handlers
+    def move_left(self):
+        if (self.my_paddle.location[0] - self.my_paddle.width/2 - 40) >= -self.canvas_width:
+            self.my_paddle.set_location([self.my_paddle.location[0] - 40, self.my_paddle.location[1]])
+
+    def move_right(self):
+        if (self.my_paddle.location[0] + self.my_paddle.width/2 + 40) <= self.canvas_width:
+            self.my_paddle.set_location([self.my_paddle.location[0] + 40, self.my_paddle.location[1]])
+
+    def move_down(self):
+        if (self.my_paddle.location[1] - self.my_paddle.height/2 - 40) >= -self.canvas_height:
+            self.my_paddle.set_location([self.my_paddle.location[0], self.my_paddle.location[1] - 40])
+
+    def move_up(self):
+        if (self.my_paddle.location[1] + self.my_paddle.height/2 + 40) <= self.canvas_height:
+            self.my_paddle.set_location([self.my_paddle.location[0], self.my_paddle.location[1] + 40])
