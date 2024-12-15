@@ -3,7 +3,8 @@
 **Inspired by "The Tower" by Munyin Sam (6710545962)**
 
 **UML Diagram: https://www.figma.com/board/50PcfbOI5hI1ZHMqEyYTb4/OOP-Munyin-Sam?node-id=0-1&t=oxx2EmqE9eB1Q75G-1**
-**Youtube:**
+
+**Youtube: https://www.youtube.com/@munyinsam**
 ---
 
 ## 1. **Project Description**
@@ -99,6 +100,8 @@ One way the code could be improved is by separating the **Laser** and **Shop** i
 However, this poses a challenge because the **Laser**'s speed is an attribute that the **Shop** directly modifies when you buy an upgrade. Keeping these two systems in the same class simplifies this interaction, as the **Shop** can easily increment the **Laser's** speed without additional coordination.
 
 If the **Laser** and **Shop** were split into separate classes, it would require more complex communication between them, potentially leading to issues with maintaining synchronization. 
+
+Another point is that the **Shop** and **Main** window are seperated because the `shop` is using the tkinter but the `main` is using the turtle.
 
 While separating these functionalities would result in cleaner code, the tight coupling between the **Laser** and **Shop** through the speed attribute makes it more practical to keep them together for now. This is due to my inexperience I apologize.
 
