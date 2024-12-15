@@ -374,7 +374,7 @@ class BouncingSimulator:
 
         items = [
             ("Upgrade Shooting Speed", 100),
-            ("Upgrade Laser Size", 150),
+            ("Upgrade Laser Size", 100),
             ("Health Potion", 50),
         ]
         
@@ -391,12 +391,12 @@ class BouncingSimulator:
             self.laser_delay *= 0.8
             print(f"You bought a {item} for {price} coins!")
         
-        elif item == "Upgrade Laser Size" and self.coins >= 150:
-            self.coins -= 150
+        elif item == "Upgrade Laser Size" and self.coins >= 100:
+            self.coins -= 100
             self.laser_size += 0.5
             print(f"You bought a {item} for {price} coins!")
 
-        elif item == "Health Potion" and self.coins >= 50:
+        elif item == "Health Potion" and self.coins >= 50 and self.player_current_health < 3:
             self.coins -= 50
             self.player_current_health = self.player_max_health
             print(f"You bought a {item} for {price} coins!")
