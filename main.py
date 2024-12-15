@@ -28,7 +28,6 @@ class BouncingSimulator:
         self.canvas_height = 320
 
         self.gamemode = "classic"
-        self.game_status = "pending"
 
         self.laser_delay = 0.4
         self.last_laser_time = 0  # Time when the last laser was fired
@@ -258,6 +257,8 @@ class BouncingSimulator:
         self.gamemode = "fast"
         self.run()
 
+    # Setting Up Displays (set_display())
+
     def setup_coin_display(self):
         self.coin_writer.hideturtle()
         self.coin_writer.penup()
@@ -315,6 +316,7 @@ class BouncingSimulator:
     def clear_notes(self):
         self.level_notes.clear()
 
+    # -------------------------------------------
     # Shop
 
     def open_shop(self):
