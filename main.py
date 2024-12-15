@@ -20,56 +20,64 @@ class BouncingSimulator:
         self.t = 0.0
         self.pq = []
         self.HZ = 4
+
+        # Initialize turtle settings
         turtle.speed(0)
         turtle.tracer(0)
         turtle.hideturtle()
         turtle.colormode(255)
+
+        # Canvas dimensions
         self.canvas_width = 420
         self.canvas_height = 340
 
+        # Game settings
         self.gamemode = "classic"
         self.done = False
-
         self.laser_delay = 0.4
         self.last_laser_time = 0  # Time when the last laser was fired
         self.laser_size = 1
-
         self.player_max_health = 3
         self.player_current_health = 3
-
         self.ball_spawn_interval = 2  # Interval to spawn a ball
         self.last_ball_time = 0  # Time when the last ball was spawned
-        print(self.canvas_width, self.canvas_height)
-
-        self.shop_window = None
-
         self.coins = 0
-        self.score = 0  # Initial score
+        self.score = 0
         self.level = level
         self.level_notes_text = "LMB to shoot"
+
+        # Writers for game stats
         self.coin_writer = turtle.Turtle()
         self.score_writer = turtle.Turtle()
         self.health_writer = turtle.Turtle()
         self.level_writer = turtle.Turtle()
         self.level_notes = turtle.Turtle()
 
-        # Spawning the first wave balls
+        # Shop settings
+        self.shop_window = None
+
+        # Debugging print
+        print(self.canvas_width, self.canvas_height)
+
+        # Spawn the first wave of balls
         self.spawn_ball(amount=10)
 
-        # Player 
+        # Player initialization
         tom = turtle.Turtle()
         self.my_paddle = paddle.Paddle(50, 50, (37, 150, 190), tom)
         self.my_paddle.set_location([0, 0])
 
+        # Screen settings
         self.screen = turtle.Screen()
         self.screen.onclick(self.shoot_laser)
 
-        # open the shop
+        # Open the shop
         self.open_shop()
 
     # Spawn Balls -------------------------------
 
-    def spawn_ball(self, size=0.05, input_speed=0.5, color=(255, 0, 0), amount=1, health=1, reward=None):
+    def spawn_ball(self, size=0.05, input_speed=0.5, color=(255, 0, 0), 
+                amount=1, health=1, reward=None):
         ball_radius = size * self.canvas_width  # Ball radius based on size
         min_distance = ball_radius * 2  # Minimum distance between balls (twice the radius to avoid overlap)
         max_attempts = 100  # Maximum attempts to find a valid position for the ball
@@ -87,17 +95,29 @@ class BouncingSimulator:
                 edge = random.randint(0, 3)
 
                 if edge == 0:  # Top edge
-                    x = random.uniform(-self.canvas_width + min_distance_from_wall, self.canvas_width - min_distance_from_wall)
+                    x = random.uniform(
+                        -self.canvas_width + min_distance_from_wall,
+                        self.canvas_width - min_distance_from_wall
+                    )
                     y = self.canvas_height - min_distance_from_wall
                 elif edge == 1:  # Bottom edge
-                    x = random.uniform(-self.canvas_width + min_distance_from_wall, self.canvas_width - min_distance_from_wall)
+                    x = random.uniform(
+                        -self.canvas_width + min_distance_from_wall,
+                        self.canvas_width - min_distance_from_wall
+                    )
                     y = -self.canvas_height + min_distance_from_wall
                 elif edge == 2:  # Left edge
                     x = -self.canvas_width + min_distance_from_wall
-                    y = random.uniform(-self.canvas_height + min_distance_from_wall, self.canvas_height - min_distance_from_wall)
+                    y = random.uniform(
+                        -self.canvas_height + min_distance_from_wall,
+                        self.canvas_height - min_distance_from_wall
+                    )
                 else:  # Right edge
                     x = self.canvas_width - min_distance_from_wall
-                    y = random.uniform(-self.canvas_height + min_distance_from_wall, self.canvas_height - min_distance_from_wall)
+                    y = random.uniform(
+                        -self.canvas_height + min_distance_from_wall,
+                        self.canvas_height - min_distance_from_wall
+                    )
 
                 # Check if the ball is too close to the center
                 if abs(x) < min_distance_from_center and abs(y) < min_distance_from_center:
@@ -113,12 +133,15 @@ class BouncingSimulator:
 
                 if not overlap:
                     # Calculate velocity directed toward the center
-                    direction = math.sqrt(x**2 + y**2)
+                    direction = math.sqrt(x ** 2 + y ** 2)
                     vx = input_speed * (-x / direction)
                     vy = input_speed * (-y / direction)
 
                     # Create and append the new ball
-                    new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list), health=health, reward=reward)
+                    new_ball = ball.Ball(
+                        ball_radius, x, y, vx, vy, color, len(self.ball_list),
+                        health=health, reward=reward
+                    )
                     self.ball_list.append(new_ball)
                     existing_ball_positions.append((x, y))
                     # print("Ball appended at position:", x, y)
@@ -130,34 +153,35 @@ class BouncingSimulator:
 
     def shoot_laser(self, x, y):
         # Calculate the direction of the laser towards the mouse position
-        current_time = time.time() 
+        current_time = time.time()
         if current_time - self.last_laser_time < self.laser_delay:
             return  # Don't fire a laser if the delay has not passed
+
         paddle_x, paddle_y = self.my_paddle.location
         dx = x - paddle_x
         dy = y - paddle_y
-        
+
         # Normalize the direction vector
         magnitude = math.sqrt(dx**2 + dy**2)
         if magnitude != 0:
             dx /= magnitude
             dy /= magnitude
-        
+
         laser_speed = 10
-        
+
         # Velocity of the laser
         vx = dx * laser_speed
         vy = dy * laser_speed
-        
+
         laser = {
             "x": paddle_x,
             "y": paddle_y + self.my_paddle.height // 2,
             "vx": vx,
             "vy": vy,
-            "width": 5*self.laser_size,
-            "height": 5*self.laser_size
+            "width": 5 * self.laser_size,
+            "height": 5 * self.laser_size
         }
-        
+
         self.lasers.append(laser)
         self.last_laser_time = current_time
 
@@ -167,7 +191,9 @@ class BouncingSimulator:
             laser["y"] += laser["vy"]
 
             # Check if laser goes off-screen
-            if laser["y"] > self.canvas_height or laser["x"] < -self.canvas_width or laser["x"] > self.canvas_width:
+            if (laser["y"] > self.canvas_height or 
+                    laser["x"] < -self.canvas_width or 
+                    laser["x"] > self.canvas_width):
                 self.lasers.remove(laser)
                 continue
 
@@ -175,11 +201,12 @@ class BouncingSimulator:
             for ball_obj in self.ball_list[:]:
                 if (abs(laser["x"] - ball_obj.x) < ball_obj.radius + laser["width"] / 2 and
                         abs(laser["y"] - ball_obj.y) < ball_obj.radius + laser["height"] / 2):
+
                     # Calculate reflection
                     dx = laser["x"] - ball_obj.x
                     dy = laser["y"] - ball_obj.y
                     magnitude = math.sqrt(dx**2 + dy**2)
-                    
+
                     if magnitude != 0:
                         # Normalize the collision vector
                         dx /= magnitude
@@ -197,31 +224,36 @@ class BouncingSimulator:
                         laser["vx"] *= scaling_factor
                         laser["vy"] *= scaling_factor
 
+                    # Handle ball health and rewards
                     if ball_obj.health > 1:
                         ball_obj.health -= 1
                     else:
                         self.ball_list.remove(ball_obj)
                         self.score += ball_obj.default_health
-                        self.coins += ball_obj.default_health*5
+                        self.coins += ball_obj.default_health * 5
+
                         if ball_obj.reward == "increase_shooting_speed":
                             print("Shooting Speed Increased.")
-                            self.laser_delay = self.laser_delay*0.8
+                            self.laser_delay *= 0.8
                         if ball_obj.reward == "shooting_upgrade":
                             print("Increase Shooting Size.")
                             self.laser_size += 1
 
-                    # limit laser's lifetime by bounce count
+                    # Limit laser's lifetime by bounce count
                     if "bounces" not in laser:
                         laser["bounces"] = 0
                     laser["bounces"] += 1
-                    if laser["bounces"] > 2:  
+                    if laser["bounces"] > 2:
                         self.lasers.remove(laser)
                     break
 
     def draw_lasers(self):
         for laser in self.lasers:
             turtle.penup()
-            turtle.goto(laser["x"] - laser["width"] / 2, laser["y"] - laser["height"] / 2)
+            turtle.goto(
+                laser["x"] - laser["width"] / 2,
+                laser["y"] - laser["height"] / 2
+            )
             turtle.pendown()
             turtle.color("blue")
             turtle.begin_fill()
@@ -230,9 +262,9 @@ class BouncingSimulator:
                 turtle.left(90)
                 turtle.forward(laser["height"])
                 turtle.left(90)
-            turtle.end_fill()
-
-    # Menu
+            turtle.end_fill()\
+            
+    # Menu -------------------
 
     def show_menu(self):
         # Draw the menu screen
@@ -240,13 +272,21 @@ class BouncingSimulator:
         turtle.penup()
         turtle.goto(0, 50)
         turtle.color("black")
-        turtle.write("Tower Defence Demo", align="center", font=("Arial", 24, "bold"))
+        turtle.write(
+            "Tower Defence Demo", align="center", font=("Arial", 24, "bold")
+        )
         turtle.goto(0, -50)
-        turtle.write("Press 'P' to Play (Classic Mode)", align="center", font=("Arial", 18, "normal"))
+        turtle.write(
+            "Press 'P' to Play (Classic Mode)", align="center", font=("Arial", 18, "normal")
+        )
         turtle.goto(0, -100)
-        turtle.write("Press 'Q' to Play (Fast Game Mode)", align="center", font=("Arial", 18, "normal"))
+        turtle.write(
+            "Press 'Q' to Play (Fast Game Mode)", align="center", font=("Arial", 18, "normal")
+        )
         turtle.goto(0, -150)
-        turtle.write("Munyin Sam 6710545962", align="center", font=("Arial", 12, "bold"))
+        turtle.write(
+            "Munyin Sam 6710545962", align="center", font=("Arial", 12, "bold")
+        )
         turtle.hideturtle()
         turtle.update()
 
@@ -265,16 +305,35 @@ class BouncingSimulator:
         self.run()
 
     # Setting Up Displays (set_display())
-
     def setup_display(self):
         self.display_elements = {
-            "coins": {"writer": self.coin_writer, "position": (-360, 240), "text": f"Coins: {self.coins}"},
-            "score": {"writer": self.score_writer, "position": (-360, 270), "text": f"Score: {self.score}"},
-            "health": {"writer": self.health_writer, "position": (-24, 50), "text": f"HP: {self.player_current_health}"},
-            "level": {"writer": self.level_writer, "position": (280, 270), "text": f"Level: {self.level}"},
-            "notes": {"writer": self.level_notes, "position": (0, -300), "text": f"Tip: {self.level_notes_text}"}
+            "coins": {
+                "writer": self.coin_writer,
+                "position": (-360, 240),
+                "text": f"Coins: {self.coins}",
+            },
+            "score": {
+                "writer": self.score_writer,
+                "position": (-360, 270),
+                "text": f"Score: {self.score}",
+            },
+            "health": {
+                "writer": self.health_writer,
+                "position": (0, 50),
+                "text": f"HP: {self.player_current_health}",
+            },
+            "level": {
+                "writer": self.level_writer,
+                "position": (280, 270),
+                "text": f"Level: {self.level}",
+            },
+            "notes": {
+                "writer": self.level_notes,
+                "position": (0, -300),
+                "text": f"Tip: {self.level_notes_text}",
+            },
         }
-        
+
         for key, value in self.display_elements.items():
             value["writer"].hideturtle()
             value["writer"].penup()
@@ -285,7 +344,11 @@ class BouncingSimulator:
         writer = self.display_elements[element]["writer"]
         text = self.display_elements[element]["text"]
         writer.clear()
-        writer.write(text, align="left" if element != ("notes" or "health") else "center", font=("Arial", 14, "bold"))
+        writer.write(
+            text,
+            align="left" if element not in ("notes", "health") else "center",
+            font=("Arial", 14, "bold"),
+        )
 
     def update_level(self):
         self.display_elements["level"]["text"] = f"Level: {self.level}"
@@ -303,31 +366,35 @@ class BouncingSimulator:
     # Shop
 
     def open_shop(self):
-
         self.shop_window = Toplevel()
         self.shop_window.title("Shop")
         self.shop_window.geometry("400x300")
 
         Label(self.shop_window, text="Upgrade Shop", font=("Arial", 16)).pack(pady=20)
 
-        items = [("Upgrade Shooting Speed", 100), ("Upgrade Laser Size", 150),("Health Potion", 50)]
+        items = [
+            ("Upgrade Shooting Speed", 100),
+            ("Upgrade Laser Size", 150),
+            ("Health Potion", 50),
+        ]
+        
         for item, price in items:
             Button(
                 self.shop_window,
                 text=f"{item} for {price} coins",
-                command=lambda i=item, p=price: self.buy_item(i, p)
+                command=lambda i=item, p=price: self.buy_item(i, p),
             ).pack(pady=5)
 
     def buy_item(self, item, price):
-
         if item == "Upgrade Shooting Speed" and self.coins >= 100:
             self.coins -= 100
-            self.laser_delay = self.laser_delay*0.8
+            self.laser_delay *= 0.8
             print(f"You bought a {item} for {price} coins!")
         
         elif item == "Upgrade Laser Size" and self.coins >= 150:
             self.coins -= 150
             self.laser_size += 0.5
+            print(f"You bought a {item} for {price} coins!")
 
         elif item == "Health Potion" and self.coins >= 50:
             self.coins -= 50
@@ -409,12 +476,12 @@ class BouncingSimulator:
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
 
-        if self.score >= 100:
+        if self.score >= 110:
             self.done = True
             self.show_win_message()
             return
 
-        if self.t > 6500:
+        if self.t > 7000:
             self.done = True
             self.show_lose_message()
             return
@@ -458,12 +525,12 @@ class BouncingSimulator:
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
 
-        if self.score >= 100:
+        if self.score >= 120:
             self.done = True
             self.show_win_message()
             return
 
-        if self.t > 6500:
+        if self.t > 7000:
             self.done = True
             self.show_lose_message()
             return
@@ -504,6 +571,7 @@ class BouncingSimulator:
         # Initialize pq with collision events and redraw event
         for i in range(len(self.ball_list)):
             self.__predict(self.ball_list[i])
+        
         heapq.heappush(self.pq, my_event.Event(0, None, None, None))
         lose_radius = 48  # Radius around the center where "You Lose" is triggered
 
@@ -520,39 +588,45 @@ class BouncingSimulator:
             if self.level == 1:
                 self.setup_notes_display("Don't let the ball hit you. Press LMB to shoot")
 
-            for i in range(len(self.ball_list) - 1, -1, -1): # Fixing Index Out Of Range
+            # Handle ball movement and health check
+            for i in range(len(self.ball_list) - 1, -1, -1):  # Iterating backwards to avoid index errors when removing balls
                 self.ball_list[i].move(e.time - self.t)
 
                 # Check if any ball is within the lose radius around the center
                 if abs(self.ball_list[i].x) <= lose_radius and abs(self.ball_list[i].y) <= lose_radius:
                     self.player_current_health -= 1  # Decrease health
                     print(f"Player hit! Health: {self.player_current_health}")  # Debugging statement
-                    del self.ball_list[i] 
+                    del self.ball_list[i]
 
                     if self.player_current_health <= 0:  # Check if health is zero or below
                         self.show_lose_message()  # Display lose message
-                        return
+                        return  # End the game if the player loses
 
             self.t = e.time
 
-            if (ball_a is not None) and (ball_b is not None) and (paddle_a is None):
+            # Handle collision events
+            if ball_a is not None and ball_b is not None and paddle_a is None:
                 ball_a.bounce_off(ball_b)
-            elif (ball_a is not None) and (ball_b is None) and (paddle_a is None):
+            elif ball_a is not None and ball_b is None and paddle_a is None:
                 ball_a.bounce_off_vertical_wall()
-            elif (ball_a is None) and (ball_b is not None) and (paddle_a is None):
+            elif ball_a is None and ball_b is not None and paddle_a is None:
                 ball_b.bounce_off_horizontal_wall()
-            elif (ball_a is None) and (ball_b is None) and (paddle_a is None):
+            elif ball_a is None and ball_b is None and paddle_a is None:
                 self.__redraw()
-            elif (ball_a is not None) and (ball_b is None) and (paddle_a is not None):
+            elif ball_a is not None and ball_b is None and paddle_a is not None:
                 ball_a.bounce_off_paddle()
 
-            # Bugged
-
-            self.__predict(ball_a)
-            # self.__predict(ball_b)
+            # Predict next events (Still Bugged So I commentted it)
+            # self.__predict(ball_a)
+            # if ball_b is not None:
+            #     self.__predict(ball_b)
             self.__paddle_predict()
+
+            # Handle the rest of the gameplay
             self.handle_gameplay()
-            if self.done == True:
+
+            # Check if the game is done
+            if self.done:
                 break
 
         turtle.done()
