@@ -101,5 +101,7 @@ However, this poses a challenge because the **Laser**'s speed is an attribute th
 
 If the **Laser** and **Shop** were split into separate classes, it would require more complex communication between them, potentially leading to issues with maintaining synchronization. 
 
+Another point is that the **Shop** and **Main** window are seperated because the `shop` is using the tkinter but the `main` is using the turtle.
+
 While separating these functionalities would result in cleaner code, the tight coupling between the **Laser** and **Shop** through the speed attribute makes it more practical to keep them together for now. This is due to my inexperience I apologize.
 
