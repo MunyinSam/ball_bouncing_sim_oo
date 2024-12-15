@@ -4,7 +4,7 @@
 
 **UML Diagram: https://www.figma.com/board/50PcfbOI5hI1ZHMqEyYTb4/OOP-Munyin-Sam?node-id=0-1&t=oxx2EmqE9eB1Q75G-1**
 
-**Youtube: https://www.youtube.com/@munyinsam**
+**Youtube: [https://www.youtube.com/@munyinsam](https://youtu.be/BuwE8dZbNUc)**
 ---
 
 ## 1. **Project Description**
