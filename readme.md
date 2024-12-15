@@ -2,6 +2,8 @@
 
 **Inspired by "The Tower" by Munyin Sam (6710545962)**
 
+UML Diagram: https://www.figma.com/board/50PcfbOI5hI1ZHMqEyYTb4/OOP-Munyin-Sam?node-id=0-1&t=oxx2EmqE9eB1Q75G-1
+Youtube:
 ---
 
 ## 1. **Project Description**
@@ -81,9 +83,22 @@ We’ve tested the game to make sure it works as expected. Here are the main thi
 - The upgrade system works in the shop, and buffs are applied correctly.
 - The UI display are correctly updated in real-time.
 
-There are a couple of small issues that we’re still working on:
+There are a couple of small issues:
 
 - **Collision Detection**: Sometimes, due to floating-point precision, balls might overlap or not bounce off surfaces as expected. (It might even freeze the screen you'll need to restart the application because the event can't handle the traffic)
 - **Laser Cooldown**: Occasionally, if the player clicks too quickly, the laser cooldown doesn’t trigger properly.
 
-These are minor bugs, and we’ll be fixing them in future updates to make the game more polished and consistent.
+## 5. **Rate your project sophistication level**
+
+I rate my simulation 85. It's hard to add many collisions in my game design where all the balls are heading to the same place so I've implemented it on the laser instead.
+
+## Potential Improvements
+
+One way the code could be improved is by separating the **Laser** and **Shop** into their own classes. This would make the code more modular and easier to maintain.
+
+However, this poses a challenge because the **Laser**'s speed is an attribute that the **Shop** directly modifies when you buy an upgrade. Keeping these two systems in the same class simplifies this interaction, as the **Shop** can easily increment the **Laser's** speed without additional coordination.
+
+If the **Laser** and **Shop** were split into separate classes, it would require more complex communication between them, potentially leading to issues with maintaining synchronization. 
+
+While separating these functionalities would result in cleaner code, the tight coupling between the **Laser** and **Shop** through the speed attribute makes it more practical to keep them together for now. This is due to my inexperience I apologize.
+
