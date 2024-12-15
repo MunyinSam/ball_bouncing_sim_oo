@@ -43,7 +43,7 @@ class BouncingSimulator:
         self.last_ball_time = 0  # Time when the last ball was spawned
         self.coins = 0
         self.score = 0
-        self.level = level
+        self.level = 1
         self.level_notes_text = "LMB to shoot"
 
         # Writers for game stats
@@ -475,13 +475,26 @@ class BouncingSimulator:
             ]
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
+        
+        if self.level > 5:
+            a = random.randint(1, 50)
+            b = random.randint(1, 50 - a)
+            c = random.randint(1, 50 - a - b)
+            d = 50 - (a + b + c)
+            spawn_info = [
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": a},
+                {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": b},
+                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": c, "health": 2},
+                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": d, "health": 25},
+            ]
+            self.handle_level_up(4, spawn_info, "")           
 
-        if self.score >= 110:
+        if self.score >= 150:
             self.done = True
             self.show_win_message()
             return
 
-        if self.t > 7000:
+        if self.t > 8000:
             self.done = True
             self.show_lose_message()
             return
@@ -519,7 +532,7 @@ class BouncingSimulator:
             spawn_info = [
                 {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 15},
                 {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 3},
-                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 2},
+                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 7},
                 {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 25},
             ]
             self.handle_level_up(4, spawn_info, "")
