@@ -44,7 +44,7 @@ class BouncingSimulator:
         self.shop_window = None
 
         self.coins = 0
-        self.score = 100  # Initial score
+        self.score = 0  # Initial score
         self.level = level
         self.score_writer = turtle.Turtle()
         self.level_writer = turtle.Turtle()
