@@ -230,7 +230,7 @@ class BouncingSimulator:
                     else:
                         self.ball_list.remove(ball_obj)
                         self.score += ball_obj.default_health
-                        self.coins += ball_obj.default_health * 5
+                        self.coins += ball_obj.default_health * 7
 
                         if ball_obj.reward == "increase_shooting_speed":
                             print("Shooting Speed Increased.")
@@ -281,7 +281,7 @@ class BouncingSimulator:
         )
         turtle.goto(0, -100)
         turtle.write(
-            "Press 'Q' to Play (Fast Game Mode)", align="center", font=("Arial", 18, "normal")
+            "Press 'Q' to Play (Quick Mode)", align="center", font=("Arial", 18, "normal")
         )
         turtle.goto(0, -150)
         turtle.write(
@@ -370,14 +370,15 @@ class BouncingSimulator:
         self.shop_window.title("Shop")
         self.shop_window.geometry("400x300")
 
-        Label(self.shop_window, text="Upgrade Shop", font=("Arial", 16)).pack(pady=20)
+        Label(self.shop_window, text="Shop", font=("Arial", 30, "bold")).pack(pady=20)
 
         items = [
-            ("Upgrade Shooting Speed", 100),
-            ("Upgrade Laser Size", 100),
+            ("Shooting Speed", 100),
+            ("Bullet Size", 100),
             ("Health Potion", 50),
+            ("Max Health", 100)
         ]
-        
+
         for item, price in items:
             Button(
                 self.shop_window,
@@ -386,20 +387,26 @@ class BouncingSimulator:
             ).pack(pady=5)
 
     def buy_item(self, item, price):
-        if item == "Upgrade Shooting Speed" and self.coins >= 100:
+        if item == "Shooting Speed" and self.coins >= 100:
             self.coins -= 100
             self.laser_delay *= 0.8
             print(f"You bought a {item} for {price} coins!")
         
-        elif item == "Upgrade Laser Size" and self.coins >= 100:
+        elif item == "Bullet Size" and self.coins >= 100:
             self.coins -= 100
             self.laser_size += 0.5
             print(f"You bought a {item} for {price} coins!")
 
-        elif item == "Health Potion" and self.coins >= 50 and self.player_current_health < 3:
+        elif item == "Health Potion" and self.coins >= 50 and self.player_current_health < self.player_max_health:
             self.coins -= 50
             self.player_current_health = self.player_max_health
             print(f"You bought a {item} for {price} coins!")
+        
+        elif item == "Max Health" and self.coins >= 100:
+            self.coins -= 100
+            self.player_max_health += 1
+            print(f"You bought a {item} for {price} coins!")
+        
 
     def clear_shop_window(self):
         # Check if shop_window is initialized and destroy it
@@ -470,26 +477,13 @@ class BouncingSimulator:
             spawn_info = [
                 {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 14},
                 {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": 3},
-                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 2},
-                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 25},
+                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 5},
+                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 30},
             ]
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
-        
-        if self.level > 5:
-            a = random.randint(1, 50)
-            b = random.randint(1, 50 - a)
-            c = random.randint(1, 50 - a - b)
-            d = 50 - (a + b + c)
-            spawn_info = [
-                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": a},
-                {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": b},
-                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": c, "health": 2},
-                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": d, "health": 25},
-            ]
-            self.handle_level_up(4, spawn_info, "")           
 
-        if self.score >= 150:
+        if self.score >= 130:
             self.done = True
             self.show_win_message()
             return
@@ -511,8 +505,8 @@ class BouncingSimulator:
 
         if self.t > 2000 and self.level == 2:
             spawn_info = [
-                {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 15},
-                {"size": 0.06, "input_speed": 0.65, "color": (0, 128, 0), "amount": 2, "reward": "increase_shooting_speed"},
+                {"size": 0.03, "input_speed": 1.3, "color": (0, 0, 139), "amount": 15},
+                {"size": 0.06, "input_speed": 0.75, "color": (0, 128, 0), "amount": 2, "reward": "increase_shooting_speed"},
                 {"size": 0.06, "input_speed": 0.7, "color": (0, 255, 255), "amount": 1, "reward": "shooting_upgrade"},
             ]
             self.handle_level_up(2, spawn_info, "Shooting green balls make you shoot faster.")
@@ -521,24 +515,24 @@ class BouncingSimulator:
         if self.t > 3000 and self.level == 3:
             spawn_info = [
                 {"size": 0.05, "input_speed": 0.6, "color": (255, 0, 0), "amount": 14},
-                {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 3},
+                {"size": 0.03, "input_speed": 1.35, "color": (0, 0, 139), "amount": 3},
                 {"size": 0.07, "input_speed": 0.6, "color": (0, 0, 0), "amount": 5, "health": 3},
-                {"size": 0.06, "input_speed": 0.65, "color": (0, 128, 0), "amount": 2, "reward": "increase_shooting_speed"},
+                {"size": 0.06, "input_speed": 0.8, "color": (0, 128, 0), "amount": 2, "reward": "increase_shooting_speed"},
             ]
             self.handle_level_up(3, spawn_info, "Try shooting different kinds of ball to get an upgrade. Goodluck have fun!")
             print("Level 3")
 
         if self.t > 4300 and self.level == 4:
             spawn_info = [
-                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 15},
-                {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 3},
-                {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 7},
+                {"size": 0.05, "input_speed": 0.7, "color": (255, 0, 0), "amount": 15},
+                {"size": 0.03, "input_speed": 1.4, "color": (0, 0, 139), "amount": 3},
+                {"size": 0.07, "input_speed": 0.7, "color": (0, 0, 0), "amount": 5, "health": 7},
                 {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 25},
             ]
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
 
-        if self.score >= 120:
+        if self.score >= 140:
             self.done = True
             self.show_win_message()
             return
