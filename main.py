@@ -121,7 +121,7 @@ class BouncingSimulator:
                     new_ball = ball.Ball(ball_radius, x, y, vx, vy, color, len(self.ball_list), health=health, reward=reward)
                     self.ball_list.append(new_ball)
                     existing_ball_positions.append((x, y))
-                    print("Ball appended at position:", x, y)
+                    # print("Ball appended at position:", x, y)
                     break
 
                 attempts += 1
@@ -218,8 +218,6 @@ class BouncingSimulator:
                         self.lasers.remove(laser)
                     break
 
-
-
     def draw_lasers(self):
         for laser in self.lasers:
             turtle.penup()
@@ -312,22 +310,22 @@ class BouncingSimulator:
 
         Label(self.shop_window, text="Upgrade Shop", font=("Arial", 16)).pack(pady=20)
 
-        items = [("Ball Shooting Speed", 100), ("Laser Size", 150),("Health Potion", 50)]
+        items = [("Upgrade Shooting Speed", 100), ("Upgrade Laser Size", 150),("Health Potion", 50)]
         for item, price in items:
             Button(
                 self.shop_window,
-                text=f"Buy {item} for {price} coins",
+                text=f"{item} for {price} coins",
                 command=lambda i=item, p=price: self.buy_item(i, p)
             ).pack(pady=5)
 
     def buy_item(self, item, price):
 
-        if item == "Ball Shooting Cooldown" and self.coins >= 100:
+        if item == "Upgrade Shooting Speed" and self.coins >= 100:
             self.coins -= 100
             self.laser_delay = self.laser_delay*0.8
             print(f"You bought a {item} for {price} coins!")
         
-        elif item == "Laser Size" and self.coins >= 150:
+        elif item == "Upgrade Laser Size" and self.coins >= 150:
             self.coins -= 150
             self.laser_size += 0.5
 
@@ -377,7 +375,7 @@ class BouncingSimulator:
     def handle_normal_gameplay(self):
         if self.t > 1000 and self.level == 1:
             spawn_info = [
-                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 14},
                 {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": 3},
             ]
             self.handle_level_up(1, spawn_info, "Blue balls are fast! Be aware.")
@@ -393,7 +391,7 @@ class BouncingSimulator:
 
         if self.t > 3000 and self.level == 3:
             spawn_info = [
-                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 14},
                 {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": 3},
                 {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 2},
                 {"size": 0.06, "input_speed": 0.7, "color": (0, 255, 255), "amount": 1, "reward": "shooting_upgrade"},
@@ -403,10 +401,10 @@ class BouncingSimulator:
 
         if self.t > 4300 and self.level == 4:
             spawn_info = [
-                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 14},
                 {"size": 0.03, "input_speed": 1, "color": (0, 0, 139), "amount": 3},
                 {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 2},
-                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 21},
+                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 25},
             ]
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
@@ -442,7 +440,7 @@ class BouncingSimulator:
 
         if self.t > 3000 and self.level == 3:
             spawn_info = [
-                {"size": 0.05, "input_speed": 0.6, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.05, "input_speed": 0.6, "color": (255, 0, 0), "amount": 14},
                 {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 3},
                 {"size": 0.07, "input_speed": 0.6, "color": (0, 0, 0), "amount": 5, "health": 3},
                 {"size": 0.06, "input_speed": 0.65, "color": (0, 128, 0), "amount": 2, "reward": "increase_shooting_speed"},
@@ -452,10 +450,10 @@ class BouncingSimulator:
 
         if self.t > 4300 and self.level == 4:
             spawn_info = [
-                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 10},
+                {"size": 0.05, "input_speed": 0.5, "color": (255, 0, 0), "amount": 15},
                 {"size": 0.03, "input_speed": 1.2, "color": (0, 0, 139), "amount": 3},
                 {"size": 0.07, "input_speed": 0.5, "color": (0, 0, 0), "amount": 5, "health": 2},
-                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 21},
+                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 25},
             ]
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
