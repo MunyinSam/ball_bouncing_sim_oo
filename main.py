@@ -262,7 +262,7 @@ class BouncingSimulator:
                 turtle.left(90)
                 turtle.forward(laser["height"])
                 turtle.left(90)
-            turtle.end_fill()\
+            turtle.end_fill()
             
     # Menu -------------------
 
@@ -524,10 +524,10 @@ class BouncingSimulator:
 
         if self.t > 4300 and self.level == 4:
             spawn_info = [
+                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 30},
                 {"size": 0.05, "input_speed": 0.7, "color": (255, 0, 0), "amount": 15},
                 {"size": 0.03, "input_speed": 1.4, "color": (0, 0, 139), "amount": 3},
                 {"size": 0.07, "input_speed": 0.7, "color": (0, 0, 0), "amount": 5, "health": 7},
-                {"size": 0.12, "input_speed": 0.35, "color": (128, 0, 128), "amount": 1, "health": 25},
             ]
             self.handle_level_up(4, spawn_info, "")
             print("Level 4")
